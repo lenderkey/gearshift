@@ -3,7 +3,7 @@
 #   
 #   David Janes
 #   Gearshift
-#   2023-09-23
+#   2023-0903-23
 #
 
 from Context import Context
@@ -20,8 +20,7 @@ L = "build"
 
 @cli.command("build", help="Build a Gearshift Database") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
-@click.option("--csv", help="use CSV logger to this file")
-def build(dry_run, csv):
+def build(dry_run):
     """
     Build a Gearshift Database
     
