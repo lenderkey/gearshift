@@ -31,14 +31,23 @@ def unsynced(dry_run:bool, max_size:int, max_files:int):
 
     count = 0
     size = 0
+    more = False
     for record in db.unsynced(): 
+        if count >= max_files:
+            more = True
+            break
+        if size >= max_size:
+            more = True
+            break
+
         count += 1
         size += record.size
 
         print("- filename:", json.dumps(record.filename))
         print(f'  data_hash: "{record.data_hash}"')
 
-        if count >= max_files:
-            break
-        if size >= max_size:
-            break
+        if record.is_deleted:
+            print("  is_deleted: true")
+
+    if more:
+        print("more: true")
