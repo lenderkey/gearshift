@@ -17,11 +17,13 @@ import logging as logger
 
 import helpers
 
+L = "Context"
+
 class Context:
     instance = None
 
     def __init__(self, cfg_file=None):
-        L = "__init__"
+        L = "Context.__init__"
 
         self._connection = None
 
@@ -34,12 +36,6 @@ class Context:
                 self.cfg = yaml.safe_load(fin) or self.cfg
         except IOError:
             logger.fatal(f"{L}: {self.cfg_file=} not found")
-            sys.exit(1)
-
-        if src_root := self.get("src.root"):
-            self.set("src.root", self.resolve_path(src_root))
-        else:
-            logger.fatal(f"{L}: {self.cfg_file=} has no src.root")
             sys.exit(1)
 
         if not os.path.isdir(self.src_root_path):
@@ -56,8 +52,19 @@ class Context:
 
     @property
     def src_root_path(self):
-        return self.get("src.root", required=True)
+        return self.resolve_path(self.get("src.root", required=True))
     
+    @property
+    def dst_root_path(self):
+        return self.resolve_path(self.get("dst.root", required=True))
+        
+    def dst_link_path(self, hash) -> str:
+        return os.path.join(self.dst_root_path, "links", hash[:2], hash[2:4], hash)
+
+    def dst_store_path(self, filename) -> str:
+        assert not os.path.isabs(filename)
+        return os.path.join(self.dst_root_path, "store", filename)
+
     @property
     def db_path(self):
         return self.resolve_path(self.get("src.db", "./gearshift.db"))
@@ -69,6 +76,10 @@ class Context:
         return helpers.set(self.cfg, keypath, value)
 
     def resolve_path(self, path:str):
+        if path is None:
+            logger.fatal(f"{L}: {path=} cannot be resolved")
+            sys.exit(1)
+
         if path.startswith("~"):
             return os.path.normpath(os.path.expanduser(path))
         elif path.startswith("./"):
@@ -83,6 +94,52 @@ class Context:
         cursor = self._connection.cursor()
 
         return cursor
+    
+    def ingest_file(self, filename:str, dst_name:str):
+        L = "Context.ingest_file"
+
+        ## part 1 - write the link file
+        with open(filename, "rb") as fin:
+            data = fin.read()
+            hash256 = helpers.sha256_file(fin)
+            link_filename = self.dst_link_path(hash256)
+
+        if os.path.exists(link_filename):
+            logger.info(f"{L}: {link_filename=} already exists - no need to write")
+        else:
+            os.makedirs(os.path.dirname(link_filename), exist_ok=True)
+
+            try:
+                link_filename_tmp = link_filename + ".tmp"
+                with open(link_filename_tmp, "wb") as fout:
+                    fout.write(data)
+            except IOError as x:
+                logger.error(f"{L}: {x} writing {link_filename_tmp=}")
+
+                try: os.remove(link_filename_tmp)
+                except: pass
+
+                sys.exit(1)
+
+            os.rename(link_filename_tmp, link_filename)
+            logger.info(f"{L}: wrote {link_filename=}")
+
+        ## part 2 - the main file
+        if dst_name:
+            if os.path.isabs(dst_name):
+                raise ValueError(f"{L}: {dst_name=} must be relative")
+
+            dst_filename = self.dst_store_path(dst_name)
+            try:
+                os.remove(dst_filename)
+                logger.info(f"{L}: removed existing {dst_filename=}")
+            except:
+                pass
+
+            os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
+            os.link(link_filename, dst_filename)
+
+            logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
 
 if __name__ == '__main__':
     context = Context()
