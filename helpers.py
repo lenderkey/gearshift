@@ -11,6 +11,7 @@ from typing import BinaryIO, Union, Any
 import re
 import hashlib
 import os
+import base64
 
 import logging as logger
 
@@ -79,7 +80,7 @@ def sha256_file(fd:BinaryIO) -> str:
             break
         sha256.update(data)
 
-    return sha256.hexdigest()
+    return base64.urlsafe_b64encode(sha256.digest()).decode("utf-8").rstrip("=")
 
 def md5_data(*av) -> str:
     md5 = hashlib.md5()
@@ -87,7 +88,8 @@ def md5_data(*av) -> str:
         data = str(item).encode("utf-8")
         md5.update(data)
         md5.update(b"@@")
-    return md5.hexdigest()
+
+    return base64.urlsafe_b64encode(md5.digest()).decode("utf-8").rstrip("=")
 
 def walker():
     from Context import Context
@@ -102,7 +104,7 @@ def walker():
 
 def analyze(filename:str) -> dict:
     L = "helpers.analyze"
-    
+
     from Context import Context
     
     fullpath = os.path.join(Context.instance.src_root_path, filename)
