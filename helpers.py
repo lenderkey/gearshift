@@ -106,6 +106,7 @@ def analyze(filename:str) -> dict:
     L = "helpers.analyze"
 
     from Context import Context
+    from FileRecord import FileRecord
     
     fullpath = os.path.join(Context.instance.src_root_path, filename)
     stbuf = os.stat(fullpath)
@@ -114,18 +115,16 @@ def analyze(filename:str) -> dict:
         with open(fullpath, "rb") as fin:
             """Make SHA256 hash of file context"""
 
-            return {
-                "filename": filename,
-                "nhash": md5_data(filename),
-                "ahash": md5_data(stbuf.st_ino, stbuf.st_size, stbuf.st_mtime),
-                "fhash": sha256_file(fin),
-            }
-    except IOError:
-        logger.warning(f"{L}: cannot open {fullpath}")
+            return FileRecord.make(
+                filename=filename,
+                attr_hash=md5_data(stbuf.st_ino, stbuf.st_size, stbuf.st_mtime),
+                data_hash=sha256_file(fin),
+            )
+    except FileNotFoundError:
+        logger.warning(f"{L}: file deleted {fullpath}")
 
-        return {
-            "filename": filename,
-            "nhash": md5_data(filename),
-            "ahash": None,
-            "fhash": None,
-        }
+        return FileRecord.make_deleted(
+            filename=filename,
+        )
+    except IOError as x:
+        logger.warning(f"{L}: cannot read {fullpath}: {x}")
