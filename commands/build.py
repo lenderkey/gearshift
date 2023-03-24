@@ -7,6 +7,7 @@
 #
 
 from Context import Context
+from FileRecord import FileRecord
 
 import logging as logger
 import pprint
@@ -42,7 +43,7 @@ def build(dry_run):
         icount = 0
 
         for filename in helpers.walker():
-            icount += db.put_record(helpers.analyze(filename))
+            icount += db.put_record(FileRecord.analyze(filename))
             rcount += 1
 
         db.commit()

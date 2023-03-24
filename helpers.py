@@ -102,29 +102,3 @@ def walker():
 
             yield filename
 
-def analyze(filename:str) -> dict:
-    L = "helpers.analyze"
-
-    from Context import Context
-    from FileRecord import FileRecord
-    
-    fullpath = os.path.join(Context.instance.src_root_path, filename)
-    stbuf = os.stat(fullpath)
-
-    try:
-        with open(fullpath, "rb") as fin:
-            """Make SHA256 hash of file context"""
-
-            return FileRecord.make(
-                filename=filename,
-                attr_hash=md5_data(stbuf.st_ino, stbuf.st_size, stbuf.st_mtime),
-                data_hash=sha256_file(fin),
-            )
-    except FileNotFoundError:
-        logger.warning(f"{L}: file deleted {fullpath}")
-
-        return FileRecord.make_deleted(
-            filename=filename,
-        )
-    except IOError as x:
-        logger.warning(f"{L}: cannot read {fullpath}: {x}")

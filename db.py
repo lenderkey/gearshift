@@ -30,6 +30,7 @@ def setup() -> None:
     cursor.execute('''CREATE TABLE IF NOT EXISTS records
                 (filename TEXT,
                 name_hash TEXT PRIMARY KEY,
+                size INTEGER,
                 attr_hash TEXT,
                 data_hash TEXT,
                 is_synced INTEGER,
@@ -62,9 +63,10 @@ def put_record(record:FileRecord):
     # If the record doesn't exist or the attr_hash has changed, insert the new record
     if existing_attr_hash is None or existing_attr_hash[0] != record.attr_hash:
         cursor.execute("""
-INSERT OR REPLACE INTO records (filename, name_hash, attr_hash, data_hash, is_synced, is_deleted) 
-VALUES (?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO records (filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted) 
+VALUES (?, ?, ?, ?, ?, ?, ?)""", (
             record.filename, 
+            record.size, 
             record.name_hash, 
             record.attr_hash, 
             record.data_hash, 
