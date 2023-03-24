@@ -78,3 +78,28 @@ VALUES (?, ?, ?, ?, ?, ?, ?)""", (
     else:
         logger.debug(f"{L}: skipping {record.filename=}")
         return 0
+
+def unsynced():
+    """
+    Return a list of unsynced records
+    """
+    
+    cursor = Context.instance.cursor()
+
+    # Define the SQL query to retrieve unsynced records
+    query = "SELECT filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted FROM records WHERE is_synced = 0"
+
+    # Execute the query and fetch the first record
+    cursor.execute(query)
+    while row := cursor.fetchone():
+        filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted = row
+
+        yield FileRecord.make(
+            filename=filename,
+            size=size,
+            attr_hash=attr_hash,
+            data_hash=data_hash,
+            is_synced=is_synced,
+            is_deleted=is_deleted,
+
+        )

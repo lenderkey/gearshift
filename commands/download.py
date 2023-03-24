@@ -26,5 +26,5 @@ L = "download"
 @click.option("--max-count", help="max number of files", 
               type=int,
               default=100)
-def build(dry_run:bool, max_size:int, max_count:int):
+def download(dry_run:bool, max_size:int, max_count:int):
     pass
