@@ -17,9 +17,9 @@ import click
 
 import helpers
 
-L = "build"
+L = "local-ingest"
 
-@cli.command("ingest", help="Add a file to local Gearshift") # type: ignore
+@cli.command("local-ingest", help="Add a file to local Gearshift") # type: ignore
 @click.argument("filename", required=True)
 @click.option("--dst-name", help="store destination", default=None)
 def build(filename, dst_name):

@@ -16,9 +16,9 @@ import click
 import helpers
 import db
 
-L = "download"
+L = "remote-zip"
 
-@cli.command("download", help="Build a Gearshift Database") # type: ignore
+@cli.command("remote-zip", help="Remote ZIP files") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 @click.option("--max-size", help="max size of files (may be exceeded if 1 file)", 
               type=int,

@@ -1,5 +1,5 @@
 #
-#   commands/download.py
+#   commands/checksync.py
 #   
 #   David Janes
 #   Gearshift
@@ -16,9 +16,9 @@ import click
 import helpers
 import db
 
-L = "unsynced"
+L = "local-sync"
 
-@cli.command("unsynced", help="Return unsynced records") # type: ignore
+@cli.command("local-sync", help="Check which records have been synced") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 @click.option("--max-size", help="max size of files (may be exceeded if 1 file)", 
               type=int,
@@ -26,13 +26,13 @@ L = "unsynced"
 @click.option("--max-files", help="max number of files", 
               type=int,
               default=1000)
-def unsynced(dry_run:bool, max_size:int, max_files:int):
+def checksync(dry_run:bool, max_size:int, max_files:int):
     print("records:")
 
     count = 0
     size = 0
     more = False
-    for record in db.unsynced(): 
+    for record in db.checksync(): 
         if count >= max_files:
             more = True
             break

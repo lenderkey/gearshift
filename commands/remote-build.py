@@ -17,9 +17,9 @@ import click
 import helpers
 import db
 
-L = "build"
+L = "remote-build"
 
-@cli.command("build", help="Build a Gearshift Database") # type: ignore
+@cli.command("remote-build", help="Build a Gearshift Database") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 def build(dry_run):
     """
