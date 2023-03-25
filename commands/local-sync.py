@@ -12,42 +12,42 @@ import logging as logger
 import pprint
 import json
 import click
+import yaml
+import sys
 
 import helpers
 import db
 
 L = "local-sync"
 
-@cli.command("local-sync", help="Check which records have been synced") # type: ignore
+@cli.command("local-sync", help="See if records have been synced") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
-@click.option("--max-size", help="max size of files (may be exceeded if 1 file)", 
-              type=int,
-              default=10 * 1000 * 1000)
-@click.option("--max-files", help="max number of files", 
-              type=int,
-              default=1000)
-def checksync(dry_run:bool, max_size:int, max_files:int):
-    print("records:")
+@click.option("--filename",
+              help="file", 
+              default="-")
+def local_sync(dry_run:bool, filename:str):
+    context = Context.instance
 
-    count = 0
-    size = 0
-    more = False
-    for record in db.checksync(): 
-        if count >= max_files:
-            more = True
-            break
-        if size >= max_size:
-            more = True
-            break
+    if filename == "-":
+        data = yaml.safe_load(sys.stdin)
+    else:
+        with open(filename) as fp:
+            data = yaml.safe_load(fp)
 
-        count += 1
-        size += record.size
+    nrecords = []
+    for record in data.get("records", []):
+        if record.get("is_deleted"):
+            continue
 
-        print("- filename:", json.dumps(record.filename))
-        print(f'  data_hash: "{record.data_hash}"')
+        data_hash = record.get("data_hash")
+        if not data_hash:
+            continue
 
-        if record.is_deleted:
-            print("  is_deleted: true")
+        if context.dst_has_hash(data_hash):
+            continue
 
-    if more:
-        print("more: true")
+        nrecords.append(record)
+
+    data["records"] = nrecords
+
+    print(yaml.dump(data))

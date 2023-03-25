@@ -1,5 +1,5 @@
 #
-#   commands/download.py
+#   commands/remote-zip.py
 #   
 #   David Janes
 #   Gearshift
