@@ -24,11 +24,15 @@ L = "dst-ingest"
 @click.option("--dst-name", help="store destination", default=None)
 def dst_ingest(filename, dst_name):
     """
-    Ingest a file into the local Gearshift database
+    Ingest a file into the local Gearshift database. 
+    Note normally you don't need to use this.
     
     Example:
     python gearshift.py --debug ingest gearshift.py --dst-name xxx
     """
 
     context = Context.instance
-    context.ingest_file(filename, dst_name)
+    data_hash, is_new = context.ingest_file(filename)
+
+    if dst_name:
+        context.ingest_link(data_hash, dst_name)

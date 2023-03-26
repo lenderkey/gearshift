@@ -99,10 +99,9 @@ class Context:
         link_filename = self.dst_link_path(data_hash)
         return os.path.exists(link_filename)
     
-    def ingest_file(self, filename:str, dst_name:str):
+    def ingest_file(self, filename:str):
         L = "Context.ingest_file"
 
-        ## part 1 - write the link file
         with open(filename, "rb") as fin:
             data = fin.read()
             data_hash = helpers.sha256_file(fin)
@@ -110,40 +109,57 @@ class Context:
 
         if os.path.exists(link_filename):
             logger.info(f"{L}: {link_filename=} already exists - no need to write")
-        else:
-            os.makedirs(os.path.dirname(link_filename), exist_ok=True)
+            return ( data_hash, False )
+        
+        os.makedirs(os.path.dirname(link_filename), exist_ok=True)
 
-            try:
-                link_filename_tmp = link_filename + ".tmp"
-                with open(link_filename_tmp, "wb") as fout:
-                    fout.write(data)
-            except IOError as x:
-                logger.error(f"{L}: {x} writing {link_filename_tmp=}")
+        try:
+            link_filename_tmp = link_filename + ".tmp"
+            with open(link_filename_tmp, "wb") as fout:
+                fout.write(data)
+        except IOError as x:
+            logger.error(f"{L}: {x} writing {link_filename_tmp=}")
 
-                try: os.remove(link_filename_tmp)
-                except: pass
+            try: os.remove(link_filename_tmp)
+            except: pass
 
-                sys.exit(1)
+            sys.exit(1)
 
-            os.rename(link_filename_tmp, link_filename)
-            logger.info(f"{L}: wrote {link_filename=}")
+        os.rename(link_filename_tmp, link_filename)
+        logger.info(f"{L}: wrote {link_filename=}")
 
-        ## part 2 - the main file
-        if dst_name:
-            if os.path.isabs(dst_name):
-                raise ValueError(f"{L}: {dst_name=} must be relative")
+        return ( data_hash, True )
 
-            dst_filename = self.dst_store_path(dst_name)
+    def ingest_link(self, data_hash:str, dst_name:str):
+        L = "Context.ingest_link"
+
+        if os.path.isabs(dst_name):
+            raise ValueError(f"{L}: {dst_name=} must be relative")
+
+        link_filename = self.dst_link_path(data_hash)
+        link_stbuf = os.stat(link_filename) if os.path.exists(link_filename) else None
+        if not link_stbuf:
+            return False
+
+        dst_filename = self.dst_store_path(dst_name)
+        dst_stbuf = os.stat(dst_filename) if os.path.exists(dst_filename) else None
+
+        if dst_stbuf:
+            if dst_stbuf.st_ino == link_stbuf.st_ino:
+                logger.info(f"{L}: {dst_filename=} already linked to {link_filename=}")
+                return False
+            
             try:
                 os.remove(dst_filename)
                 logger.info(f"{L}: removed existing {dst_filename=}")
             except:
                 pass
 
-            os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
-            os.link(link_filename, dst_filename)
+        os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
+        os.link(link_filename, dst_filename)
 
-            logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
+        logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
+        return True
 
 if __name__ == '__main__':
     context = Context()
