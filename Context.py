@@ -131,6 +131,10 @@ class Context:
         return ( data_hash, True )
 
     def ingest_link(self, data_hash:str, dst_name:str):
+        """
+        Will return True if the link exists.
+        Consider returning an enumeration.
+        """
         L = "Context.ingest_link"
 
         if os.path.isabs(dst_name):
@@ -139,6 +143,7 @@ class Context:
         link_filename = self.dst_link_path(data_hash)
         link_stbuf = os.stat(link_filename) if os.path.exists(link_filename) else None
         if not link_stbuf:
+            logger.debug(f"{L}: {link_filename=} does not exist")
             return False
 
         dst_filename = self.dst_store_path(dst_name)
@@ -147,7 +152,7 @@ class Context:
         if dst_stbuf:
             if dst_stbuf.st_ino == link_stbuf.st_ino:
                 logger.info(f"{L}: {dst_filename=} already linked to {link_filename=}")
-                return False
+                return True
             
             try:
                 os.remove(dst_filename)
