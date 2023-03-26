@@ -1,5 +1,5 @@
 #
-#   commands/checksync.py
+#   commands/src-zip.py
 #   
 #   David Janes
 #   Gearshift
@@ -9,23 +9,20 @@
 from Context import Context
 
 import logging as logger
-import pprint
-import json
+
 import click
+
 import yaml
 import sys
 
-import helpers
-import db
+L = "src-zip"
 
-L = "local-sync"
-
-@cli.command("local-sync", help="See if records have been synced") # type: ignore
+@cli.command("src-zip", help="package files as zip") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 @click.option("--filename",
               help="file", 
               default="-")
-def local_sync(dry_run:bool, filename:str):
+def src_zip(dry_run:bool, filename:str):
     context = Context.instance
 
     if filename == "-":

@@ -16,9 +16,9 @@ import click
 import helpers
 import db
 
-L = "remote-sync"
+L = "src-sync"
 
-@cli.command("remote-sync", help="Return unsynced records") # type: ignore
+@cli.command("src-sync", help="Return unsynced records") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 @click.option("--max-size", help="max size of files (may be exceeded if 1 file)", 
               type=int,
@@ -26,7 +26,7 @@ L = "remote-sync"
 @click.option("--max-files", help="max number of files", 
               type=int,
               default=1000)
-def unsynced(dry_run:bool, max_size:int, max_files:int):
+def src_sync(dry_run:bool, max_size:int, max_files:int):
     print("records:")
 
     count = 0
