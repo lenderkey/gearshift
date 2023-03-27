@@ -82,14 +82,31 @@ def sha256_file(fd:BinaryIO) -> str:
 
     return base64.urlsafe_b64encode(sha256.digest()).decode("utf-8").rstrip("=")
 
-def md5_data(*av) -> str:
-    md5 = hashlib.md5()
-    for item in av:
-        data = str(item).encode("utf-8")
-        md5.update(data)
-        md5.update(b"@@")
+def sha256_data(*av) -> str:
+    hasher = hashlib.sha256()
+    for x, data in enumerate(av):
+        if x:
+            hasher.update(b"@@")
 
-    return base64.urlsafe_b64encode(md5.digest()).decode("utf-8").rstrip("=")
+        if not isinstance(data, bytes):
+            data = str(data).encode("utf-8")
+            
+        hasher.update(data)
+
+    return base64.urlsafe_b64encode(hasher.digest()).decode("utf-8").rstrip("=")
+
+def md5_data(*av) -> str:
+    hasher = hashlib.md5()
+    for x, data in enumerate(av):
+        if x:
+            hasher.update(b"@@")
+
+        if not isinstance(data, bytes):
+            data = str(data).encode("utf-8")
+
+        hasher.update(data)
+
+    return base64.urlsafe_b64encode(hasher.digest()).decode("utf-8").rstrip("=")
 
 def walker():
     from Context import Context

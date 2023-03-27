@@ -102,13 +102,15 @@ class Context:
         link_filename = self.dst_link_path(data_hash)
         return os.path.exists(link_filename)
     
-    def ingest_file(self, filename:str):
+    def ingest_file(self, filename:str, data=None):
         L = "Context.ingest_file"
 
-        with open(filename, "rb") as fin:
-            data = fin.read()
-            data_hash = helpers.sha256_file(fin)
-            link_filename = self.dst_link_path(data_hash)
+        if data is None:
+            with open(filename, "rb") as fin:
+                data = fin.read()
+        
+        data_hash = helpers.sha256_data(data)
+        link_filename = self.dst_link_path(data_hash)
 
         if os.path.exists(link_filename):
             logger.info(f"{L}: {link_filename=} already exists - no need to write")
