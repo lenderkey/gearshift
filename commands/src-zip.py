@@ -8,12 +8,15 @@
 
 from Context import Context
 
-import logging as logger
-
 import click
-
 import yaml
+
+import os
 import sys
+import io
+import zipfile
+
+import logging as logger
 
 L = "src-zip"
 
@@ -31,20 +34,28 @@ def src_zip(dry_run:bool, filename:str):
         with open(filename) as fp:
             data = yaml.safe_load(fp)
 
-    nrecords = []
-    for record in data.get("records", []):
-        if record.get("is_deleted"):
-            continue
+    zout = io.BytesIO()
+    with zipfile.ZipFile(zout, mode="w") as zipper:
+        for record in data.get("records", []):
+            data_hash = record.get("data_hash")
+            src_name = record.get("filename")
+            if not data_hash or not filename:
+                continue
 
-        data_hash = record.get("data_hash")
-        if not data_hash:
-            continue
+            if os.path.isabs(src_name):
+                logger.error(f"{L}: filename must be relative: {src_name}")
+                continue
 
-        if context.dst_has_hash(data_hash):
-            continue
+            in_file = context.src_path(src_name)
+            if not os.path.exists(in_file):
+                logger.error(f"{L}: file does not exist: {in_file}")
+                continue
 
-        nrecords.append(record)
+            try:
+                with open(in_file, "rb") as fin:
+                    zipper.writestr(os.path.join("store", src_name), fin.read())
+            except IOError:
+                logger.exception(f"{L}: unexpected error with in_file={in_file}")
 
-    data["records"] = nrecords
-
-    print(yaml.dump(data))
+    with open("xxx.zip", "wb") as fout:
+        fout.write(zout.getvalue())

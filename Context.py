@@ -54,6 +54,9 @@ class Context:
     def src_root_path(self):
         return self.resolve_path(self.get("src.root", required=True))
     
+    def src_path(self, src_name):
+        return os.path.join(self.src_root_path, src_name)
+    
     @property
     def dst_root_path(self):
         return self.resolve_path(self.get("dst.root", required=True))
