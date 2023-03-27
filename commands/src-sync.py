@@ -15,6 +15,7 @@ import click
 
 import helpers
 import db
+import sys
 
 L = "src-sync"
 
@@ -26,8 +27,16 @@ L = "src-sync"
 @click.option("--max-files", help="max number of files", 
               type=int,
               default=1000)
-def src_sync(dry_run:bool, max_size:int, max_files:int):
-    print("records:")
+@click.option("--output",
+                help="file to write to", 
+                default="-")
+def src_sync(dry_run:bool, max_size:int, max_files:int, output:str):
+    if output == "-":
+        fout = sys.stdout
+    else:
+        fout = open(output, "w")
+
+    print("records:", file=fout)
 
     count = 0
     size = 0
@@ -43,11 +52,15 @@ def src_sync(dry_run:bool, max_size:int, max_files:int):
         count += 1
         size += record.size
 
-        print("- filename:", json.dumps(record.filename))
-        print(f'  data_hash: "{record.data_hash}"')
+        print("- filename:", json.dumps(record.filename), file=fout)
+        print(f'  data_hash: "{record.data_hash}"', file=fout)
 
         if record.is_deleted:
-            print("  is_deleted: true")
+            print("  is_deleted: true", file=fout)
 
     if more:
-        print("more: true")
+        print("more: true", file=fout)
+              
+    if output != "-":
+        fout.close()
+        logger.info(f"{L}: wrote {output}")
