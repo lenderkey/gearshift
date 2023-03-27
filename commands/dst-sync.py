@@ -17,10 +17,10 @@ L = "dst-sync"
 @cli.command("dst-sync", help="See if records have been synced") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 @click.option("--input",
-              help="file to read from", 
+              help="file to read from (YAML))", 
               default="-")
 @click.option("--output",
-                help="file to write to", 
+                help="file to write to (YAML)", 
                 default="-")
 def dst_sync(dry_run:bool, input:str, output:str):
     context = Context.instance

@@ -28,7 +28,7 @@ L = "src-sync"
               type=int,
               default=1000)
 @click.option("--output",
-                help="file to write to", 
+                help="file to write to (YAML)", 
                 default="-")
 def src_sync(dry_run:bool, max_size:int, max_files:int, output:str):
     if output == "-":
