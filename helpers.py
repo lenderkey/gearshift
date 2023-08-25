@@ -111,7 +111,7 @@ def md5_data(*av) -> str:
 def walker():
     from Context import Context
 
-    root = Context.instance.src_root_path
+    root = Context.instance.src_root
     for folder, dirs, files in os.walk(root):
         for filename in files:
             filename = os.path.join(folder, filename)

@@ -38,11 +38,11 @@ class Context:
             logger.fatal(f"{L}: {self.cfg_file=} not found")
             sys.exit(1)
 
-        if not os.path.isdir(self.src_root_path):
+        if not os.path.isdir(self.src_root):
             logger.fatal(f"{L}: {self.cfg_root=} is not a directory")
             sys.exit(1)
 
-        logger.debug(f"{L}: {self.src_root_path=}")
+        logger.debug(f"{L}: {self.src_root=}")
         logger.debug(f"{L}: {self.cfg_file=}")
 
     @classmethod
@@ -51,22 +51,42 @@ class Context:
             Context.instance = Context(**ad)
 
     @property
-    def src_root_path(self):
+    def src_root(self):
         return self.resolve_path(self.get("src.root", required=True))
     
-    def src_path(self, src_name):
-        return os.path.join(self.src_root_path, src_name)
+    @property
+    def src_host(self):
+        return self.get("src.host", required=False)
     
     @property
-    def dst_root_path(self):
+    def src_user(self):
+        return self.get("src.user", required=False)
+    
+    @property
+    def src_pem(self):  
+        return self.get("src.pem", required=False)
+    
+    def src_path(self, src_name):
+        return os.path.join(self.src_root, src_name)
+    
+    @property
+    def dst_root(self):
         return self.resolve_path(self.get("dst.root", required=True))
         
+    @property
+    def dst_link_root(self):
+        links = self.get("dst.links")
+        if links:
+            return self.resolve_path(links)
+        
+        return os.path.join(self.dst_root, ".links")
+        
     def dst_link_path(self, hash) -> str:
-        return os.path.join(self.dst_root_path, "links", hash[:2], hash[2:4], hash)
+        return os.path.join(self.dst_root, "links", hash[:2], hash[2:4], hash)
 
     def dst_store_path(self, filename) -> str:
         assert not os.path.isabs(filename)
-        return os.path.join(self.dst_root_path, "store", filename)
+        return os.path.join(self.dst_root, "store", filename)
 
     @property
     def db_path(self):

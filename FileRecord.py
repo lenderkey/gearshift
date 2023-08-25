@@ -41,7 +41,7 @@ class FileRecord:
         from Context import Context
         import helpers
         
-        fullpath = os.path.join(Context.instance.src_root_path, filename)
+        fullpath = os.path.join(Context.instance.src_root, filename)
         stbuf = os.stat(fullpath)
 
         try:

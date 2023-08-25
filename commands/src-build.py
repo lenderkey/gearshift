@@ -30,7 +30,7 @@ def src_build(dry_run):
     """
 
     context = Context.instance
-    logger.info(f"{L}: started {context.src_root_path=}")
+    logger.info(f"{L}: started {context.src_root=}")
 
     if dry_run:
         for filename in helpers.walker():
