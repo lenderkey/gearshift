@@ -27,7 +27,7 @@ class Context:
 
         self._connection = None
 
-        self.cfg_file = cfg_file or os.path.expanduser("~/.gearshift/gearshift.yaml")
+        self.cfg_file = cfg_file or os.path.expanduser("~/.lenderkey/gearshift.yaml")
         self.cfg_folder = os.path.abspath(os.path.dirname(self.cfg_file))
         self.cfg = {}
 
