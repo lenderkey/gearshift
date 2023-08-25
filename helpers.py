@@ -113,7 +113,13 @@ def walker():
 
     root = Context.instance.src_root
     for folder, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if not d.startswith('.')]
+        files[:] = [d for d in files if not d.startswith('.')]
+
         for filename in files:
+            if filename.startswith("."):
+                continue
+
             filename = os.path.join(folder, filename)
             filename = os.path.relpath(filename, root)
 
