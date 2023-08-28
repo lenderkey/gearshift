@@ -49,7 +49,7 @@ def dst_zip():
         if file_record.is_deleted:
             sync_item.is_deleted
 
-        sync_items.records.append(sync_item)
+        sync_items.items.append(sync_item)
 
     response = requests.post(
         "http://127.0.0.1:8000/docs/",

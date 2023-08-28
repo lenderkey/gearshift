@@ -6,5 +6,5 @@ class SyncItem(BaseModel):
     is_deleted: bool | None = None
 
 class SyncItems(BaseModel):
-    records: list[SyncItem] = list()
+    items: list[SyncItem] = list()
     more: bool | None = False

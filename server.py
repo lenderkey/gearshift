@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Header, HTTPException
 import pprint
 
 app = FastAPI()
@@ -7,49 +7,28 @@ from fastapi import FastAPI
 from structures import SyncItems
 
 @app.post("/docs/")
-async def docs(sync_items: SyncItems):
-    pprint.pprint(sync_items)
+async def upload_bytes_or_json(
+    request: Request,
+    content_type: str = Header(None)
+):
+    match content_type:
+        case "application/json":
+            json_payload = await request.json()
+            try:
+                sync_items = SyncItems(**json_payload)
+                for item in sync_items.items:
+                    pprint.pprint(item)
+                    
+                return {"message": "Hello World"}
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+            
+        case "application/octet-stream":
+            raw_data = await request.body()
+            return {"message": "Received Bytes", "length": len(raw_data)}
 
-    return {"message": "Hello World"}
-
-# @app.get("/")
-# async def root():
-#     return {"message": "Hello World"}
-
-# @app.get("/items/{item_id}")
-# async def read_item(item_id: int):
-#     return {"item_id": item_id}
-
-
-# fake_items_db = [{"item_name": "Foo"}, {"item_name": "Bar"}, {"item_name": "Baz"}]
-
-# @app.get("/items/")
-# async def read_item(skip: int = 0, limit: int = 10):
-#     return fake_items_db[skip : skip + limit]
-
-
-# from enum import Enum
-
-# class ModelName(str, Enum):
-#     alexnet = "alexnet"
-#     resnet = "resnet"
-#     lenet = "lenet"
-
-
-# @app.get("/models/{model_name}")
-# async def get_model(model_name: ModelName):
-#     if model_name is ModelName.alexnet:
-#         return {"model_name": model_name, "message": "Deep Learning FTW!"}
-
-#     if model_name.value == "lenet":
-#         return {"model_name": model_name, "message": "LeCNN all the images"}
-
-#     return {"model_name": model_name, "message": "Have some residuals"}
-
-
-# @app.get("/files/{file_path:path}")
-# async def read_file(file_path: str):
-#     return {"file_path": file_path}
-
-
-#     from fastapi import FastAPI
+        case _:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported Content-Type header: {content_type}",
+            )
