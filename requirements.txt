@@ -1,3 +1,4 @@
 pyyaml
 click
 fastapi[all]
+requests

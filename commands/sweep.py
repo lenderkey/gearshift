@@ -51,6 +51,7 @@ def src_build(dry_run):
             rcount += 1
 
         deleted = db.mark_deleted(cutoff=start, force=True)
+        ## deleted = 0
         db.commit()
 
         logger.info(f"{L}: files={rcount} inserted={icount} deleted={deleted}")

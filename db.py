@@ -84,6 +84,11 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         logger.debug(f"{L}: inserted {record.filename=}")
         return 1
     else:
+        cursor.execute("""
+UPDATE records SET seen = ? WHERE name_hash = ?""", (
+            seen_time,
+            record.name_hash,
+        ))                     
         logger.debug(f"{L}: skipping {record.filename=}")
         return 0
 
