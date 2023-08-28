@@ -39,7 +39,7 @@ class Context:
             sys.exit(1)
 
         if not os.path.isdir(self.src_root):
-            logger.fatal(f"{L}: {self.cfg_root=} is not a directory")
+            logger.fatal(f"{L}: {self.src_root=} is not a directory")
             sys.exit(1)
 
         logger.debug(f"{L}: {self.src_root=}")
@@ -69,28 +69,28 @@ class Context:
     def src_path(self, src_name):
         return os.path.join(self.src_root, src_name)
     
-    @property
-    def dst_root(self):
-        return self.resolve_path(self.get("dst.root", required=True))
+    # @property
+    # def dst_root(self):
+    #     return self.resolve_path(self.get("dst.root", required=True))
         
-    @property
-    def dst_link_root(self):
-        links = self.get("dst.links")
-        if links:
-            return self.resolve_path(links)
+    # @property
+    # def dst_link_root(self):
+    #     links = self.get("dst.links")
+    #     if links:
+    #         return self.resolve_path(links)
         
-        return os.path.join(self.dst_root, ".links")
+    #     return os.path.join(self.dst_root, ".links")
         
-    def dst_link_path(self, hash) -> str:
-        return os.path.join(self.dst_root, "links", hash[:2], hash[2:4], hash)
+    # def dst_link_path(self, hash) -> str:
+    #     return os.path.join(self.dst_root, "links", hash[:2], hash[2:4], hash)
 
-    def dst_store_path(self, filename) -> str:
-        assert not os.path.isabs(filename)
-        return os.path.join(self.dst_root, "store", filename)
+    # def dst_store_path(self, filename) -> str:
+    #     assert not os.path.isabs(filename)
+    #     return os.path.join(self.dst_root, "store", filename)
 
     @property
     def db_path(self):
-        return self.resolve_path(self.get("src.db", "./gearshift.db"))
+        return self.resolve_path(self.get("src.db", required=True))
 
     def get(self, keypath:str, default:bool=None, required=False):
         return helpers.get(self.cfg, keypath, default=default, required=required)
