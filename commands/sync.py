@@ -12,7 +12,7 @@ import yaml
 import pprint
 import requests
 import db
-from structures import SyncItems, SyncItem
+from structures import SyncItems
 
 L = "sync"
 
@@ -41,15 +41,7 @@ def dst_zip():
         count += 1
         size += file_record.size
 
-        sync_item = SyncItem(
-            filename=file_record.filename,
-            data_hash=file_record.data_hash,
-        )
-
-        if file_record.is_deleted:
-            sync_item.is_deleted
-
-        sync_items.items.append(sync_item)
+        sync_items.items.append(file_record)
 
     response = requests.post(
         "http://127.0.0.1:8000/docs/",

@@ -15,11 +15,12 @@ async def upload_bytes_or_json(
         case "application/json":
             json_payload = await request.json()
             try:
-                sync_items = SyncItems(**json_payload)
-                for item in sync_items.items:
+                out_sync_items = SyncItems()
+                in_sync_items = SyncItems(**json_payload)
+                for item in in_sync_items.items:
                     pprint.pprint(item)
-                    
-                return {"message": "Hello World"}
+
+                return out_sync_items
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             

@@ -1,1 +1,2 @@
-from .SyncItems import SyncItems, SyncItem
+from .SyncItems import SyncItems
+from .FileRecord import FileRecord

@@ -16,22 +16,17 @@ import logging as logger
 @dataclasses.dataclass
 class FileRecord:
     filename: str
-    attr_hash: str
     data_hash: str
-    size: int
+    size: int = 0
     is_synced: bool = False
     is_deleted: bool = False
 
     @classmethod
     def make(self, filename: str, **ad):
-        import helpers
-
         return FileRecord(filename=filename, **ad)
     
     @classmethod
     def make_deleted(self, filename: str, **ad):
-        import helpers
-        
         return FileRecord(filename=filename, is_deleted=True)
 
     def analyze(filename:str) -> dict:
@@ -48,7 +43,6 @@ class FileRecord:
                 return FileRecord.make(
                     filename=filename,
                     size=stbuf.st_size,
-                    attr_hash=helpers.md5_data(stbuf.st_ino, stbuf.st_size, stbuf.st_mtime),
                     data_hash=helpers.sha256_file(fin),
                 )
         except FileNotFoundError:

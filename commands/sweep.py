@@ -7,7 +7,7 @@
 #
 
 from Context import Context
-from FileRecord import FileRecord
+from structures.FileRecord import FileRecord
 
 import logging as logger
 import pprint

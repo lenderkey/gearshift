@@ -1,10 +1,7 @@
 from pydantic import BaseModel
 
-class SyncItem(BaseModel):
-    filename: str
-    data_hash: str
-    is_deleted: bool | None = None
+from .FileRecord import FileRecord
 
 class SyncItems(BaseModel):
-    items: list[SyncItem] = list()
+    items: list[FileRecord] = list()
     more: bool | None = False
