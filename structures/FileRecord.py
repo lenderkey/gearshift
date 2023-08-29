@@ -30,32 +30,33 @@ class FileRecord:
         return FileRecord(filename=filename, is_deleted=True)
     
     @property
-    def path(self) -> str:
+    def filepath(self) -> str:
         from Context import Context
 
         return os.path.join(Context.instance.src_root, self.filename)
 
-    def analyze(filename:str) -> dict:
+    @classmethod
+    def analyze(cls, filename:str) -> dict:
         L = "helpers.analyze"
 
         from Context import Context
         import helpers
         
-        fullpath = os.path.join(Context.instance.src_root, filename)
-        stbuf = os.stat(fullpath)
+        filepath = os.path.join(Context.instance.src_root, filename)
+        stbuf = os.stat(filepath)
 
         try:
-            with open(fullpath, "rb") as fin:
+            with open(filepath, "rb") as fin:
                 return FileRecord.make(
                     filename=filename,
                     size=stbuf.st_size,
                     data_hash=helpers.sha256_file(fin),
                 )
         except FileNotFoundError:
-            logger.warning(f"{L}: file deleted {fullpath}")
+            logger.warning(f"{L}: file deleted {filepath}")
 
             return FileRecord.make_deleted(
                 filename=filename,
             )
         except IOError as x:
-            logger.warning(f"{L}: cannot read {fullpath}: {x}")
+            logger.warning(f"{L}: cannot read {filepath}: {x}")
