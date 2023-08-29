@@ -20,7 +20,6 @@ def setup() -> None:
     """
     Create a database table called records that looks like this:
     - filename
-    - name_hash
     - attr_hash
     - data_hash
     - is_synced
@@ -32,8 +31,7 @@ def setup() -> None:
     cursor = Context.instance.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS records (
-            filename TEXT,
-            name_hash TEXT PRIMARY KEY,
+            filename TEXT PRIMARY KEY,
             size INTEGER,
             attr_hash TEXT,
             data_hash TEXT,
@@ -58,23 +56,51 @@ def commit() -> None:
     cursor = Context.instance.cursor()
     cursor.execute("COMMIT")
 
-def put_record(record:FileRecord):
-    L = "db.put_record"
+def get_record(filename:str) -> FileRecord:
+    """
+    Return a list of unsynced records
+    """
+    
     cursor = Context.instance.cursor()
 
-    # Check if a record with the same name_hash already exists
-    cursor.execute("SELECT attr_hash FROM records WHERE name_hash=?", (record.name_hash,))
-    existing_attr_hash = cursor.fetchone()
-    seen_time = time.time()  # Get the current timestamp
+    query = "SELECT filename, size, attr_hash, data_hash, is_synced, is_deleted FROM records WHERE filename=?"
 
-    # If the record doesn't exist or the attr_hash has changed, insert the new record
-    if existing_attr_hash is None or existing_attr_hash[0] != record.attr_hash:
+    cursor.execute(query, (filename,))
+    row = cursor.fetchone()
+    if not row:
+        return
+    
+    filename, size, attr_hash, data_hash, is_synced, is_deleted = row
+
+    return FileRecord.make(
+        filename=filename,
+        size=size,
+        attr_hash=attr_hash,
+        data_hash=data_hash,
+        is_synced=is_synced,
+        is_deleted=is_deleted,
+    )
+
+def put_record(record:FileRecord):
+    L = "db.put_record"
+
+    cursor = Context.instance.cursor()
+    seen_time = time.time()
+
+    cursor.execute("SELECT attr_hash, data_hash FROM records WHERE filename=?", (record.filename,))
+    row = cursor.fetchone()
+    existing_attr_hash, existing_data_hash = row or ( None, None )
+
+    # If the record doesn't exist or the hashes don't exist, insert it
+    if ( existing_attr_hash is None or 
+        existing_attr_hash != record.attr_hash or 
+        existing_data_hash != record.data_hash 
+    ):
         cursor.execute("""
-INSERT OR REPLACE INTO records (filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted, seen) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO records (filename, size, attr_hash, data_hash, is_synced, is_deleted, seen) 
+VALUES (?, ?, ?, ?, ?, ?, ?)""", (
             record.filename, 
             record.size, 
-            record.name_hash, 
             record.attr_hash, 
             record.data_hash, 
             record.is_synced, 
@@ -85,9 +111,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         return 1
     else:
         cursor.execute("""
-UPDATE records SET seen = ? WHERE name_hash = ?""", (
+UPDATE records SET seen = ? WHERE filename = ?""", (
             seen_time,
-            record.name_hash,
+            record.filename,
         ))                     
         logger.debug(f"{L}: skipping {record.filename=}")
         return 0
@@ -100,12 +126,12 @@ def unsynced():
     cursor = Context.instance.cursor()
 
     # Define the SQL query to retrieve unsynced records
-    query = "SELECT filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted FROM records WHERE is_synced = 0"
+    query = "SELECT filename, size, attr_hash, data_hash, is_synced, is_deleted FROM records WHERE is_synced = 0"
 
     # Execute the query and fetch the first record
     cursor.execute(query)
     while row := cursor.fetchone():
-        filename, size, name_hash, attr_hash, data_hash, is_synced, is_deleted = row
+        filename, size, attr_hash, data_hash, is_synced, is_deleted = row
 
         yield FileRecord.make(
             filename=filename,

@@ -16,7 +16,6 @@ import logging as logger
 @dataclasses.dataclass
 class FileRecord:
     filename: str
-    name_hash: str
     attr_hash: str
     data_hash: str
     size: int
@@ -27,13 +26,13 @@ class FileRecord:
     def make(self, filename: str, **ad):
         import helpers
 
-        return FileRecord(filename=filename, name_hash=helpers.md5_data(filename), **ad)
+        return FileRecord(filename=filename, **ad)
     
     @classmethod
     def make_deleted(self, filename: str, **ad):
         import helpers
         
-        return FileRecord(filename=filename, name_hash=helpers.md5_data(filename), is_deleted=True)
+        return FileRecord(filename=filename, is_deleted=True)
 
     def analyze(filename:str) -> dict:
         L = "helpers.analyze"
