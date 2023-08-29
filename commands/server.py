@@ -15,6 +15,7 @@ import pprint
 import click
 import sys
 import time
+import os
 import subprocess
 
 import helpers
@@ -37,4 +38,8 @@ def src_build():
         "server:app",
         "--reload",
     ]
-    result = subprocess.run(command, capture_output=False, cwd="/Users/david/lenderkey/gearshift")
+    print(context.cfg_file)
+    result = subprocess.run(command, capture_output=False, cwd="/Users/david/lenderkey/gearshift", env={
+        **os.environ,
+        "GEARSHIFT_CFG": context.cfg_file,
+    })

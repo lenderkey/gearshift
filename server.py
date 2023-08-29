@@ -6,6 +6,15 @@ app = FastAPI()
 from fastapi import FastAPI
 from structures import SyncItems
 
+import os
+
+from Context import Context
+import db
+
+GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
+Context.setup(cfg_file=GEARSHIFT_CFG)
+db.setup()
+
 @app.post("/docs/")
 async def upload_bytes_or_json(
     request: Request,
@@ -18,8 +27,10 @@ async def upload_bytes_or_json(
                 out_sync_items = SyncItems()
                 in_sync_items = SyncItems(**json_payload)
                 for item in in_sync_items.items:
-                    pprint.pprint(item)
+                    if db.put_record(item, touch_only=True):
+                        out_sync_items.items.append(item)
 
+                print("out_sync_items", out_sync_items)
                 return out_sync_items
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")

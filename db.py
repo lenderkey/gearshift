@@ -68,7 +68,7 @@ def get_record(filename:str) -> FileRecord:
         is_deleted=bool(is_deleted),
     )
 
-def put_record(record:FileRecord):
+def put_record(record:FileRecord, touch_only:bool=False):
     L = "db.put_record"
 
     cursor = Context.instance.cursor()
@@ -80,6 +80,9 @@ def put_record(record:FileRecord):
 
     # If the record doesn't exist or the hashes don't exist, insert it
     if ( existing_data_hash is None or existing_data_hash != record.data_hash ):
+        if touch_only:
+            return 1
+        
         cursor.execute("""
 INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen) 
 VALUES (?, ?, ?, ?, ?, ?)""", (
