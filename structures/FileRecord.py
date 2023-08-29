@@ -28,6 +28,12 @@ class FileRecord:
     @classmethod
     def make_deleted(self, filename: str, **ad):
         return FileRecord(filename=filename, is_deleted=True)
+    
+    @property
+    def path(self) -> str:
+        from Context import Context
+
+        return os.path.join(Context.instance.src_root, self.filename)
 
     def analyze(filename:str) -> dict:
         L = "helpers.analyze"

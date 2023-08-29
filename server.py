@@ -30,7 +30,7 @@ async def upload_bytes_or_json(
                     if db.put_record(item, touch_only=True):
                         out_sync_items.items.append(item)
 
-                print("out_sync_items", out_sync_items)
+                ## print("out_sync_items", out_sync_items)
                 return out_sync_items
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
