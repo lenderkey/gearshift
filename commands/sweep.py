@@ -18,6 +18,7 @@ import time
 
 import helpers
 import db
+import bl
 
 L = "sweep"
 
@@ -47,7 +48,7 @@ def src_build(dry_run):
         icount = 0
 
         for filename in helpers.walker():
-            icount += db.put_record(FileRecord.analyze(filename))
+            icount += db.put_record(bl.analyze_file(Context.instance, filename))
             rcount += 1
 
         deleted = db.mark_deleted(cutoff=start, force=True)

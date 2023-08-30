@@ -13,6 +13,7 @@ import os
 import zipfile
 import yaml
 import pprint
+import time
 import requests
 import db
 from structures import SyncItems
@@ -22,10 +23,11 @@ L = "sync"
 import logging as logger
 
 @cli.command("sync", help="") # type: ignore
-def dst_zip():
+def sync():
     max_files = 10
     max_size = 1000 * 1000 * 1000
 
+    started = time.time()
     iterator = db.unsynced()
 
     out_item = next(iterator, None)
@@ -73,19 +75,17 @@ def dst_zip():
                     logger.exception(f"{L}: unexpected error with in_file={in_item.filepath}")
 
         zipped = zout.getvalue()
-        print("SENDING", len(zipped), count, size)
+        logger.info(f"{L}: zipped={len(zipped)} files={count}")
 
         response = requests.post(
-            "http://127.0.0.1:8000/docs/",
+            Context.instance.src_url,
             data=zipped,
             headers={
-                "Content-Type": "application/octet-stream",
+                "Content-Type": "application/zip",
             },
         )
         if response.status_code != 200:
             logger.error(f"{L}: unexpected status_code={response.status_code}")
             break
 
-
-        ## not ready for loops yet
-        ## break
+    logger.info(f"{L}: finished {time.time() - started:.4f}s")
