@@ -13,6 +13,7 @@ import sqlite3
 
 from Context import Context
 from structures.FileRecord import FileRecord
+import helpers
 
 import logging as logger
 
@@ -25,7 +26,8 @@ def setup() -> None:
             size INTEGER,
             is_synced INTEGER,
             is_deleted INTEGER,
-            seen REAL NOT NULL
+            added TEXT NOT NULL,
+            seen TEXT NOT NULL
         )''')
 
 def start() -> None:
@@ -50,19 +52,20 @@ def get_record(filename:str) -> FileRecord:
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted FROM records WHERE filename=?"
+    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records WHERE filename=?"
 
     cursor.execute(query, (filename,))
     row = cursor.fetchone()
     if not row:
         return
     
-    filename, data_hash, size, is_synced, is_deleted = row
+    filename, data_hash, size, is_synced, is_deleted, added = row
 
     return FileRecord.make(
         filename=filename,
         data_hash=data_hash,
         size=size,
+        added=added,
         is_synced=bool(is_synced),
         is_deleted=bool(is_deleted),
     )
@@ -71,7 +74,7 @@ def put_record(record:FileRecord, touch_only:bool=False):
     L = "db.put_record"
 
     cursor = Context.instance.cursor()
-    seen_time = time.time()
+    now = helpers.now()
 
     cursor.execute("SELECT data_hash FROM records WHERE filename=?", (record.filename,))
     row = cursor.fetchone()
@@ -83,34 +86,35 @@ def put_record(record:FileRecord, touch_only:bool=False):
             return 1
         
         cursor.execute("""
-INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen) 
-VALUES (?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
+VALUES (?, ?, ?, ?, ?, ?, ?)""", (
             record.filename, 
             record.data_hash, 
             record.size, 
             record.is_synced, 
             record.is_deleted,
-            seen_time,
+            now,
+            now,
         ))
         logger.debug(f"{L}: inserted {record.filename=}")
         return 1
     else:
         cursor.execute("""
 UPDATE records SET seen = ? WHERE filename = ?""", (
-            seen_time,
+            now,
             record.filename,
         ))                     
         logger.debug(f"{L}: skipping {record.filename=}")
         return 0
 
-def list(is_synced:bool=None, is_deleted:bool=None):
+def list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
     """
     Return a list of records
     """
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted FROM records"
+    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records"
     params = []
 
     extras = []
@@ -122,13 +126,21 @@ def list(is_synced:bool=None, is_deleted:bool=None):
         extras.append("is_deleted = ?")
         params.append(int(is_deleted))
 
+    if since_seen is not None:
+        extras.append("seen >= ?")
+        params.append(since_seen)
+
+    if since_added is not None:
+        extras.append("added >= ?")
+        params.append(since_added)
+
     if extras:
         query += " WHERE " + " AND ".join(extras)
 
     # Execute the query and fetch the first record
     cursor.execute(query, params)
     while row := cursor.fetchone():
-        filename, data_hash, size, is_synced, is_deleted = row
+        filename, data_hash, size, is_synced, is_deleted, added = row
 
         yield FileRecord.make(
             filename=filename,
@@ -136,11 +148,12 @@ def list(is_synced:bool=None, is_deleted:bool=None):
             size=size,
             is_synced=bool(is_synced),
             is_deleted=bool(is_deleted),
+            added=added,
         )
 
 def mark_deleted(cutoff:float, force:bool=False):
     """
-    Mark a document as deleted if it has not been seen since the cutoff time.
+    Mark a document as deleted if it has not been seen since_seen the cutoff time.
     """
 
     cursor = Context.instance.cursor()

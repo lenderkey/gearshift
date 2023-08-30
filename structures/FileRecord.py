@@ -20,6 +20,7 @@ class FileRecord:
     size: int = 0
     is_synced: bool = False
     is_deleted: bool = False
+    added: str = None
 
     @classmethod
     def make(self, filename: str, **ad):
