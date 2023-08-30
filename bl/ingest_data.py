@@ -1,24 +1,22 @@
 from Context import Context
+from structures import FileRecord
+import helpers
 
-def ingest_file(context:Context, filename:str, data:bytes=None):
-    L = "Context.ingest_file"
+import os
 
-    from structures import FileRecord
+import logging as logger
 
-    if data is None:
-        with open(filename, "rb") as fin:
-            data = fin.read()
-    
+def ingest_data(context:Context, item:FileRecord, data:bytes) -> bool:
+    L = "Context.ingest_data"
+
     data_hash = helpers.sha256_data(data)
-    return
+    assert data_hash == item.data_hash
 
-##    file_record = 
-
-    link_filename = self.dst_link_path(data_hash)
+    link_filename = context.dst_link_path(data_hash)
 
     if os.path.exists(link_filename):
         logger.info(f"{L}: {link_filename=} already exists - no need to write")
-        return ( data_hash, False )
+        return False
     
     os.makedirs(os.path.dirname(link_filename), exist_ok=True)
 
@@ -32,10 +30,10 @@ def ingest_file(context:Context, filename:str, data:bytes=None):
         try: os.remove(link_filename_tmp)
         except: pass
 
-        sys.exit(1)
+        raise x
 
     os.rename(link_filename_tmp, link_filename)
     logger.info(f"{L}: wrote {link_filename=}")
 
-    return ( data_hash, True )
+    return True
 

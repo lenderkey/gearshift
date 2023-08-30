@@ -85,8 +85,8 @@ class Context:
         
     #     return os.path.join(self.dst_root, ".links")
         
-    # def dst_link_path(self, hash) -> str:
-    #     return os.path.join(self.dst_root, "links", hash[:2], hash[2:4], hash)
+    def dst_link_path(self, hash) -> str:
+       return os.path.join(self.src_root, ".links", hash[:2], hash[2:4], hash)
 
     # def dst_store_path(self, filename) -> str:
     #     assert not os.path.isabs(filename)
