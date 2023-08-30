@@ -41,7 +41,7 @@ def src_sync(dry_run:bool, max_size:int, max_files:int, output:str):
     count = 0
     size = 0
     more = False
-    for record in db.unsynced(): 
+    for record in db.list(is_synced=False): 
         if count >= max_files:
             more = True
             break

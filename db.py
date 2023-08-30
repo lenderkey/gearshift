@@ -46,7 +46,6 @@ def commit() -> None:
 
 def get_record(filename:str) -> FileRecord:
     """
-    Return a list of unsynced records
     """
     
     cursor = Context.instance.cursor()
@@ -104,18 +103,30 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
         logger.debug(f"{L}: skipping {record.filename=}")
         return 0
 
-def unsynced():
+def list(is_synced:bool=None, is_deleted:bool=None):
     """
-    Return a list of unsynced records
+    Return a list of records
     """
     
     cursor = Context.instance.cursor()
 
-    # Define the SQL query to retrieve unsynced records
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted FROM records WHERE is_synced = 0"
+    query = "SELECT filename, data_hash, size, is_synced, is_deleted FROM records"
+    params = []
+
+    extras = []
+    if is_synced is not None:
+        extras.append("is_synced = ?")
+        params.append(int(is_synced))
+
+    if is_deleted is not None:
+        extras.append("is_deleted = ?")
+        params.append(int(is_deleted))
+
+    if extras:
+        query += " WHERE " + " AND ".join(extras)
 
     # Execute the query and fetch the first record
-    cursor.execute(query)
+    cursor.execute(query, params)
     while row := cursor.fetchone():
         filename, data_hash, size, is_synced, is_deleted = row
 

@@ -28,7 +28,7 @@ def sync():
     max_size = 1000 * 1000 * 1000
 
     started = time.time()
-    iterator = db.unsynced()
+    iterator = db.unsynced(is_synced=False)
 
     out_item = next(iterator, None)
     while out_item:

@@ -1,22 +1,25 @@
 from fastapi import FastAPI, Request, Header, HTTPException
-import pprint
-
-app = FastAPI()
-
-from fastapi import FastAPI
-from structures import SyncItems
 
 import os
-import zipfile
-import io
 
 from Context import Context
 import db
 import bl
 
+app = FastAPI()
+
 GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
 Context.setup(cfg_file=GEARSHIFT_CFG)
 db.setup()
+
+@app.get("/docs/")
+async def download():
+    context = Context.instance
+
+    try:
+        return bl.pull_json(context)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
 @app.post("/docs/")
 async def upload_bytes_or_json(
