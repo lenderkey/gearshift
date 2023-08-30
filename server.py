@@ -27,35 +27,16 @@ async def upload_bytes_or_json(
 
     match content_type:
         case "application/json":
-            json_payload = await request.json()
             try:
-                out_sync_items = SyncItems()
-                in_sync_items = SyncItems(**json_payload)
-                for item in in_sync_items.items:
-                    if not db.put_record(item, touch_only=True):
-                        continue
-
-                    out_sync_items.items.append(item)
-                    print("WANT", item)
-
-                ## print("out_sync_items", out_sync_items)
-                return out_sync_items
+                return bl.pushed_json(context, await request.json())
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
         case "application/zip":
-            raw_data = await request.body()
-            raw_io = io.BytesIO(raw_data)
-
-            zipper = zipfile.ZipFile(raw_io, mode="r")
-            for dst_name in zipper.namelist():
-                data = zipper.read(dst_name)
-                in_item = bl.data_analyze(context, dst_name, data=data)
-                is_written = bl.data_ingest(context, in_item, data=data)
-
-                print("RECEIVED", in_item)
-
-            return {"message": "Received Bytes", "length": len(raw_data)}
+            try:
+                return bl.pushed_zip(context, await request.body())
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
         case _:
             raise HTTPException(
