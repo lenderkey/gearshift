@@ -5,11 +5,11 @@ from structures import FileRecord
 
 import logging as logger
 
-def analyze_data(context:Context, filename:str, data:bytes) -> FileRecord:
+def data_analyze(context:Context, filename:str, data:bytes) -> FileRecord:
     """
     Make a FileRecord for a file where we just have the bytes.
     """
-    L = "bl.analyze_data"
+    L = "bl.data_analyze"
 
     import helpers
     

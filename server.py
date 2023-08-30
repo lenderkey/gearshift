@@ -50,8 +50,8 @@ async def upload_bytes_or_json(
             zipper = zipfile.ZipFile(raw_io, mode="r")
             for dst_name in zipper.namelist():
                 data = zipper.read(dst_name)
-                in_item = bl.analyze_data(context, dst_name, data=data)
-                is_written = bl.ingest_data(context, in_item, data=data)
+                in_item = bl.data_analyze(context, dst_name, data=data)
+                is_written = bl.data_ingest(context, in_item, data=data)
 
                 print("RECEIVED", in_item)
 

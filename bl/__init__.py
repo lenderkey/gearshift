@@ -1,3 +1,3 @@
-from .ingest_data import ingest_data
-from .analyze_file import analyze_file
-from .analyze_data import analyze_data
+from .data_ingest import data_ingest
+from .file_analyze import file_analyze
+from .data_analyze import data_analyze

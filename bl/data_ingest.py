@@ -6,8 +6,8 @@ import os
 
 import logging as logger
 
-def ingest_data(context:Context, item:FileRecord, data:bytes) -> bool:
-    L = "Context.ingest_data"
+def data_ingest(context:Context, item:FileRecord, data:bytes) -> bool:
+    L = "Context.data_ingest"
 
     data_hash = helpers.sha256_data(data)
     assert data_hash == item.data_hash

@@ -5,12 +5,12 @@ from structures import FileRecord
 
 import logging as logger
 
-def analyze_file(context:Context, filename:str) -> FileRecord:
+def file_analyze(context:Context, filename:str) -> FileRecord:
     """
     Make a FileRecord for a file that already exists on disk.
     If it is not found, it makes a deleted record.
     """
-    L = "bl.analyze_file"
+    L = "bl.file_analyze"
 
     import helpers
 
