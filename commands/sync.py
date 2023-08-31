@@ -16,7 +16,7 @@ import pprint
 import time
 import requests
 import db
-from structures import SyncItems
+from structures import SyncRequest
 
 L = "sync"
 
@@ -33,13 +33,13 @@ def sync():
 
     out_item = next(iterator, None)
     while out_item:
-        out_sync_items = SyncItems()
+        out_sync_items = SyncRequest()
 
         count = 0
         size = 0
 
         while out_item:
-            out_sync_items.items.append(out_item)
+            out_sync_items.records.append(out_item)
 
             count += 1
             size += out_item.size
@@ -61,14 +61,14 @@ def sync():
             json=out_sync_items.model_dump(),
         )
         in_json = response.json()
-        in_sync_items = SyncItems(**in_json)
+        in_sync_items = SyncRequest(**in_json)
 
-        if len(in_sync_items.items) == 0:
+        if len(in_sync_items.records) == 0:
             break
 
         zout = io.BytesIO()
         with zipfile.ZipFile(zout, mode="w") as zipper:
-            for in_item in in_sync_items.items:
+            for in_item in in_sync_items.records:
                 try:
                     with open(in_item.filepath, "rb") as fin:
                         zipper.writestr(in_item.filename, fin.read())

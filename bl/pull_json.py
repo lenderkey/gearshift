@@ -1,12 +1,12 @@
 
 from Context import Context
-from structures import SyncItems
+from structures import SyncRequest
 import db
 
-def pull_json() -> dict | SyncItems:
-    out_sync_items = SyncItems()
+def pull_json() -> dict | SyncRequest:
+    out_sync_items = SyncRequest()
 
     for item in db.list():
-        out_sync_items.items.append(item)
+        out_sync_items.records.append(item)
 
     return out_sync_items
