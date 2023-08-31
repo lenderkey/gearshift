@@ -85,6 +85,7 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
 
 def record_put(record:FileRecord) -> bool:
     """
+    NEED TO MAKE THIS MULTIPLE CALLS BECAUSE OF added
     """
     L = "db.record_put"
 
@@ -97,8 +98,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         not record.is_deleted and record.data_hash or "", 
         not record.is_deleted and record.size or 0, 
-        record.is_synced, 
-        record.is_deleted,
+        int(record.is_synced), 
+        int(record.is_deleted),
         now,
         now,
     ))

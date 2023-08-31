@@ -38,7 +38,6 @@ def src_build():
         "server:app",
         "--reload",
     ]
-    print(context.cfg_file)
     result = subprocess.run(command, capture_output=False, cwd="/Users/david/lenderkey/gearshift", env={
         **os.environ,
         "GEARSHIFT_CFG": context.cfg_file,

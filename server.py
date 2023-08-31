@@ -12,6 +12,8 @@ GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
 Context.setup(cfg_file=GEARSHIFT_CFG)
 db.setup()
 
+import logging as logger
+
 @app.get("/docs/")
 async def download():
     context = Context.instance
@@ -33,12 +35,14 @@ async def upload_bytes_or_json(
             try:
                 return bl.pushed_json(await request.json())
             except Exception as e:
+                logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
         case "application/zip":
             try:
                 return bl.pushed_zip(await request.body())
             except Exception as e:
+                logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
         case _:

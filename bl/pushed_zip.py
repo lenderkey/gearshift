@@ -7,6 +7,7 @@ import bl
 import db
 
 def pushed_zip(raw_data:bytes) -> dict:
+    print(raw_data)
     raw_io = io.BytesIO(raw_data)
 
     context = Context.instance

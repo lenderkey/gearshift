@@ -39,7 +39,7 @@ def src_build(dry_run):
         for filename in helpers.walker():
             pprint.pprint(helpers.analyze(filename))
     else:
-        start = time.time()
+        start = helpers.now()
 
         db.setup()
         db.start()
@@ -60,7 +60,6 @@ def src_build(dry_run):
             icount += 1
 
         deleted = db.mark_deleted(cutoff=start, force=True)
-        ## deleted = 0
         db.commit()
 
         logger.info(f"{L}: files={rcount} inserted={icount} deleted={deleted}")
