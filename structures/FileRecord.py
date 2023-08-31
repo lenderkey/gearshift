@@ -35,3 +35,9 @@ class FileRecord:
         from Context import Context
 
         return os.path.join(Context.instance.src_root, self.filename)
+    
+    @property
+    def linkpath(self) -> str:
+        from Context import Context
+
+        return Context.instance.dst_link_path(self.data_hash)

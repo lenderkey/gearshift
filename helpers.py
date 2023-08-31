@@ -128,4 +128,4 @@ def walker():
 def now():
     from datetime import datetime
     now = datetime.utcnow()
-    return now.isoformat(timespec='milliseconds')[:-6] + 'Z'
+    return now.isoformat()[:-3] + 'Z'

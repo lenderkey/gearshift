@@ -6,16 +6,17 @@ from Context import Context
 import bl
 import db
 
-def pushed_zip(context:Context, raw_data:bytes) -> dict:
+def pushed_zip(raw_data:bytes) -> dict:
     raw_io = io.BytesIO(raw_data)
 
+    context = Context.instance
     db.setup()
 
     zipper = zipfile.ZipFile(raw_io, mode="r")
     for dst_name in zipper.namelist():
         data = zipper.read(dst_name)
-        in_item = bl.data_analyze(context, dst_name, data=data)
-        bl.data_ingest(context, in_item, data=data)
+        in_item = bl.data_analyze(dst_name, data=data)
+        bl.data_ingest(in_item, data=data)
 
         db.start()
         db.put_record(in_item)

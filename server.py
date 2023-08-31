@@ -31,13 +31,13 @@ async def upload_bytes_or_json(
     match content_type:
         case "application/json":
             try:
-                return bl.pushed_json(context, await request.json())
+                return bl.pushed_json(await request.json())
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
         case "application/zip":
             try:
-                return bl.pushed_zip(context, await request.body())
+                return bl.pushed_zip(await request.body())
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 

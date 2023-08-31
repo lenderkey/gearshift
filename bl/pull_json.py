@@ -3,7 +3,7 @@ from Context import Context
 from structures import SyncItems
 import db
 
-def pull_json(context:Context) -> dict | SyncItems:
+def pull_json() -> dict | SyncItems:
     out_sync_items = SyncItems()
 
     for item in db.list():

@@ -70,7 +70,12 @@ def get_record(filename:str) -> FileRecord:
         is_deleted=bool(is_deleted),
     )
 
-def put_record(record:FileRecord, touch_only:bool=False):
+def put_record(record:FileRecord, touch_only:bool=False) -> bool:
+    """
+    This will return True if the record was inserted or updated.
+    If touch_only = True, a record will not be inserted/updated
+    but True will still be returned
+    """
     L = "db.put_record"
 
     cursor = Context.instance.cursor()
@@ -83,7 +88,7 @@ def put_record(record:FileRecord, touch_only:bool=False):
     # If the record doesn't exist or the hashes don't exist, insert it
     if ( existing_data_hash is None or existing_data_hash != record.data_hash ):
         if touch_only:
-            return 1
+            return True
         
         cursor.execute("""
 INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
@@ -97,7 +102,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)""", (
             now,
         ))
         logger.debug(f"{L}: inserted {record.filename=}")
-        return 1
+        return True
     else:
         cursor.execute("""
 UPDATE records SET seen = ? WHERE filename = ?""", (
@@ -105,7 +110,7 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
             record.filename,
         ))                     
         logger.debug(f"{L}: skipping {record.filename=}")
-        return 0
+        return False
 
 def list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
     """
