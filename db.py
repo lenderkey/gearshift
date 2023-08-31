@@ -46,7 +46,7 @@ def commit() -> None:
     cursor = Context.instance.cursor()
     cursor.execute("COMMIT")
 
-def get_record(filename:str) -> FileRecord:
+def record_get(filename:str) -> FileRecord:
     """
     """
     
@@ -70,13 +70,13 @@ def get_record(filename:str) -> FileRecord:
         is_deleted=bool(is_deleted),
     )
 
-def put_record(record:FileRecord, touch_only:bool=False) -> bool:
+def record_put(record:FileRecord, touch_only:bool=False) -> bool:
     """
     This will return True if the record was inserted or updated.
     If touch_only = True, a record will not be inserted/updated
     but True will still be returned
     """
-    L = "db.put_record"
+    L = "db.record_put"
 
     cursor = Context.instance.cursor()
     now = helpers.now()

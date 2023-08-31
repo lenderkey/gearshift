@@ -48,7 +48,7 @@ def src_build(dry_run):
         icount = 0
 
         for filename in helpers.walker():
-            icount += db.put_record(bl.file_analyze(filename))
+            icount += db.record_put(bl.file_analyze(filename))
             rcount += 1
 
         deleted = db.mark_deleted(cutoff=start, force=True)

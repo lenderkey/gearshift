@@ -15,9 +15,9 @@ def pushed_json(raw_json:dict) -> dict:
     for item in in_sync_items.items:
         if item.is_deleted:
             ## mark record deleted and delete the file
-            db.put_record(item, touch_only=False)
+            db.record_put(item, touch_only=False)
             bl.record_delete(item)
-        elif db.put_record(item, touch_only=True):
+        elif db.record_put(item, touch_only=True):
             ## file has changed - ask for it
             item.is_synced = False
             out_sync_items.items.append(item)

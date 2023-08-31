@@ -19,7 +19,7 @@ def pushed_zip(raw_data:bytes) -> dict:
         bl.data_ingest(in_item, data=data)
 
         db.start()
-        db.put_record(in_item)
+        db.record_put(in_item)
         db.commit()
 
         print("RECEIVED", in_item)
