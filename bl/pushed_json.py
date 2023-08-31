@@ -12,17 +12,25 @@ def pushed_json(raw_json:dict) -> dict:
     """
     out_sync_items = SyncRequest()
     in_sync_items = SyncRequest(**raw_json)
-    for item in in_sync_items.records:
-        if item.is_deleted:
-            ## mark record deleted and delete the file
-            db.record_put(item, touch_only=False)
-            bl.record_delete(item)
-        elif db.record_put(item, touch_only=True):
-            ## file has changed - ask for it
-            item.is_synced = False
-            out_sync_items.records.append(item)
+
+    for in_record in in_sync_items.records:
+        ## just delete the record
+        if in_record.is_deleted:
+            db.record_delete(in_record)
+            bl.record_delete(in_record)
+        elif current_record := db.record_get(in_record):
+            db.record_touch(in_record)
         else:
-            ## file has not changed
-            pass
+            in_record.is_synced = False
+            out_sync_items.records.append(in_record)
+            continue
+
+        '''
+        Right here we can add a big efficiency by looking for a
+        whether the file exists already. However, there are some security
+        concerns so we will do this later. Basically we don't
+        want people to be able to grab files that they don't have 
+        access to by hash.
+        '''
 
     return out_sync_items

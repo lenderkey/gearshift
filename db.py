@@ -46,15 +46,15 @@ def commit() -> None:
     cursor = Context.instance.cursor()
     cursor.execute("COMMIT")
 
-def record_get(filename:str) -> FileRecord:
+def record_get(record:FileRecord) -> FileRecord:
     """
     """
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records WHERE filename=?"
+    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records WHERE filename=? AND data_hash=?"
 
-    cursor.execute(query, (filename,))
+    cursor.execute(query, (record.filename, record.data_hash))
     row = cursor.fetchone()
     if not row:
         return
@@ -70,47 +70,60 @@ def record_get(filename:str) -> FileRecord:
         is_deleted=bool(is_deleted),
     )
 
-def record_put(record:FileRecord, touch_only:bool=False) -> bool:
+def record_touch(record:FileRecord) -> bool:
+    L = "db.record_touch"
+    cursor = Context.instance.cursor()
+    now = helpers.now()
+
+    cursor.execute("""
+UPDATE records SET seen = ? WHERE filename = ?""", (
+        now,
+        record.filename,
+    ))                     
+    logger.debug(f"{L}: skipping {record.filename=}")
+    return False
+
+def record_put(record:FileRecord) -> bool:
     """
-    This will return True if the record was inserted or updated.
-    If touch_only = True, a record will not be inserted/updated
-    but True will still be returned
     """
     L = "db.record_put"
 
     cursor = Context.instance.cursor()
     now = helpers.now()
 
-    cursor.execute("SELECT data_hash FROM records WHERE filename=?", (record.filename,))
-    row = cursor.fetchone()
-    existing_data_hash = row and row[0]
-
-    # If the record doesn't exist or the hashes don't exist, insert it
-    if ( existing_data_hash is None or existing_data_hash != record.data_hash ):
-        if touch_only:
-            return True
-        
-        cursor.execute("""
+    cursor.execute("""
 INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
 VALUES (?, ?, ?, ?, ?, ?, ?)""", (
-            record.filename, 
-            record.data_hash, 
-            record.size, 
-            record.is_synced, 
-            record.is_deleted,
-            now,
-            now,
-        ))
-        logger.debug(f"{L}: inserted {record.filename=}")
-        return True
-    else:
-        cursor.execute("""
-UPDATE records SET seen = ? WHERE filename = ?""", (
-            now,
-            record.filename,
-        ))                     
-        logger.debug(f"{L}: skipping {record.filename=}")
-        return False
+        record.filename, 
+        not record.is_deleted and record.data_hash or "", 
+        not record.is_deleted and record.size or 0, 
+        record.is_synced, 
+        record.is_deleted,
+        now,
+        now,
+    ))
+    logger.debug(f"{L}: inserted/updated {record.filename=}")
+
+def record_delete(record:FileRecord) -> bool:
+    """
+    """
+    L = "db.record_put"
+
+    cursor = Context.instance.cursor()
+    now = helpers.now()
+
+    cursor.execute("""
+INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
+VALUES (?, ?, ?, ?, ?, ?, ?)""", (
+        record.filename, 
+        "", 
+        0, 
+        record.is_synced, 
+        True,
+        now,
+        now,
+    ))
+    logger.debug(f"{L}: deleted {record.filename=}")
 
 def list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
     """
