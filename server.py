@@ -18,19 +18,21 @@ import logging as logger
 
 security = HTTPBearer()
 
-def get_current_user(authorization: HTTPAuthorizationCredentials = Security(security)):
+def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
     token = authorization.credentials
     authorized = bl.authorize(token)
     if authorized is None:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+    ## add additional info here - IP address, etc.
 
     return authorized
 
 @app.get("/docs/", tags=["secure"])
 async def download(
-    authorized: str = Depends(get_current_user),
+    authorized: str = Depends(get_authorized),
 ):
-    print("HERE:XXX", authorized)
+    print("HERE:AUTHORIZED", authorized)
     try:
         return bl.pull_json()
     except Exception as e:
@@ -40,27 +42,28 @@ async def download(
 async def upload_bytes_or_json(
     request: Request,
     content_type: str = Header(None),
-    authorized: str = Depends(get_current_user),
+    authorized: str = Depends(get_authorized),
 ):
+    print("HERE:AUTHORIZED", authorized)
     context = Context.instance
-    print("HERE:XXX", authorized)
 
     match content_type:
         case "application/json":
             try:
-                return bl.pushed_json(await request.json())
+                return bl.pushed_json(await request.json(), authorized=authorized)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
-        case "application/ip":
+        case "application/zip":
             try:
-                return bl.pushed_zip(await request.body())
+                return bl.pushed_zip(await request.body(), authorized=authorized)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
         case _:
+            logger.error(f"Unsupported Content-Type header: {content_type}")
             raise HTTPException(
                 status_code=400,
                 detail=f"Unsupported Content-Type header: {content_type}",

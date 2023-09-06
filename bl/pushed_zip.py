@@ -6,7 +6,7 @@ from Context import Context
 import bl
 import db
 
-def pushed_zip(raw_data:bytes) -> dict:
+def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
     ## print(raw_data)
     raw_io = io.BytesIO(raw_data)
 

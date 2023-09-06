@@ -7,7 +7,7 @@ from structures import SyncRequest
 import bl
 import db
 
-def pushed_json(raw_json:dict) -> dict:
+def pushed_json(raw_json:dict, authorized:dict) -> dict:
     """
     This is called SERVER side when the CLIENT sends a SyncRequest
     """
