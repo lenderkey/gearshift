@@ -7,7 +7,7 @@ import bl
 import db
 
 def pushed_zip(raw_data:bytes) -> dict:
-    print(raw_data)
+    ## print(raw_data)
     raw_io = io.BytesIO(raw_data)
 
     context = Context.instance
@@ -23,6 +23,6 @@ def pushed_zip(raw_data:bytes) -> dict:
         db.record_put(in_item)
         db.commit()
 
-        print("RECEIVED", in_item)
+        ## print("RECEIVED", in_item)
 
     return {"message": "Received Bytes", "length": len(raw_data)}

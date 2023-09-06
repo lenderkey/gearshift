@@ -60,7 +60,7 @@ def sync():
                 out_sync_items.more = True
                 break
             
-        print("A.1", list(outd.keys()))
+        ## "A.1", list(outd.keys()))
         response = requests.post(
             "http://127.0.0.1:8000/docs/",
             json=out_sync_items.model_dump(),
@@ -86,9 +86,9 @@ def sync():
             try: del outd[in_record.filename]
             except KeyError: pass
 
-        print("A")
+        ## print("A")
         for _record in outd.values():
-            print("B")
+            ## print("B")
             _record.is_synced = True
             db.record_put(_record)
 
@@ -122,7 +122,7 @@ def sync():
                     "Content-Type": "application/zip",
                 },
             )
-            print(response.headers, response.raw)
+            ## print(response.headers, response.raw)
             if response.status_code != 200:
                 logger.error(f"{L}: unexpected status_code={response.status_code}")
                 break
