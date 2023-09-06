@@ -6,6 +6,9 @@ import bl
 import db
 
 def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
+    """
+    SERVER side when the CLIENT sends a ZIP with documents
+    """
     zipper = zipfile.ZipFile(io.BytesIO(raw_data), mode="r")
     for dst_name in zipper.namelist():
         data = zipper.read(dst_name)

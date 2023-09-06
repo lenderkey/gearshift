@@ -9,7 +9,7 @@ import db
 
 def pushed_json(raw_json:dict, authorized:dict) -> dict:
     """
-    This is called SERVER side when the CLIENT sends a SyncRequest
+    SERVER side when the CLIENT sends a SyncRequest
     """
     out_sync_items = SyncRequest()
     in_sync_items = SyncRequest(**raw_json)
