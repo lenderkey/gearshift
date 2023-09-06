@@ -9,21 +9,21 @@ import logging as logger
 
 lock = threading.Lock()
 
-def data_ingest(item:FileRecord, data:bytes) -> None:
+def record_ingest(record:FileRecord, data:bytes) -> None:
     """
     This will create a link file (based on hash), and then link the destination
     file to the link file.
 
     Note that this is only used Server / Destination side. 
     """
-    L = "Context.data_ingest"
+    L = "Context.record_ingest"
 
     data_hash = helpers.sha256_data(data)
-    assert data_hash == item.data_hash
+    assert data_hash == record.data_hash
 
     with lock:
         ## make the link file
-        linkpath = item.linkpath
+        linkpath = record.linkpath
         
         if not os.path.exists(linkpath):
             logger.info(f"{L}: {linkpath=} already exists - no need to write")
@@ -46,7 +46,7 @@ def data_ingest(item:FileRecord, data:bytes) -> None:
             logger.info(f"{L}: wrote {linkpath=}")
         
         ## link the dst file - we could check inodes, but this is easier (?)
-        dst_filename = item.filepath
+        dst_filename = record.filepath
 
         os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
 

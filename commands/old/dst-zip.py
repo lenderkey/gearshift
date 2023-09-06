@@ -45,7 +45,7 @@ def dst_zip(dry_run:bool, input:str, output:str):
                 logger.error(f"{L}: filename must be relative: {dst_name}")
                 continue
 
-            data_hash, is_new = context.data_ingest(dst_name, data=zipper.read(dst_name))
+            data_hash, is_new = context.record_ingest(dst_name, data=zipper.read(dst_name))
 
             context.ingest_link(data_hash, dst_name)
 

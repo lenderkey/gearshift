@@ -25,7 +25,7 @@ def dst_ingest(filename, dst_name):
     """
 
     context = Context.instance
-    data_hash, is_new = context.data_ingest(filename)
+    data_hash, is_new = context.record_ingest(filename)
 
     if dst_name:
         context.ingest_link(data_hash, dst_name)

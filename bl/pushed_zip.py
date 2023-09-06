@@ -1,4 +1,3 @@
-import os
 import zipfile
 import io
 
@@ -7,17 +6,11 @@ import bl
 import db
 
 def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
-    ## print(raw_data)
-    raw_io = io.BytesIO(raw_data)
-
-    context = Context.instance
-
-    zipper = zipfile.ZipFile(raw_io, mode="r")
+    zipper = zipfile.ZipFile(io.BytesIO(raw_data), mode="r")
     for dst_name in zipper.namelist():
         data = zipper.read(dst_name)
-        in_item = bl.data_analyze(dst_name, data=data)
-        bl.data_ingest(in_item, data=data)
+        record = bl.data_analyze(dst_name, data=data)
 
-        db.record_put(in_item)
+        bl.record_put(record, data=data, authorized=authorized)
 
     return {"message": "Received Bytes", "length": len(raw_data)}
