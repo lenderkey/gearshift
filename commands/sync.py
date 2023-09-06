@@ -24,6 +24,8 @@ import logging as logger
 
 @cli.command("sync", help="") # type: ignore
 def sync():
+    import bl
+
     max_files = 10
     max_size = 1000 * 1000 * 1000
 
@@ -60,11 +62,17 @@ def sync():
                 out_sync_items.more = True
                 break
             
-        ## "A.1", list(outd.keys()))
         response = requests.post(
             "http://127.0.0.1:8000/docs/",
             json=out_sync_items.model_dump(),
+            headers={
+                **bl.authorization_header(),
+            },
         )
+        if response.status_code != 200:
+            logger.error(f"{L}: unexpected status_code={response.status_code}")
+            break
+
         in_json = response.json()
         in_sync_items = SyncRequest(**in_json)
 
@@ -120,6 +128,7 @@ def sync():
                 data=zipped,
                 headers={
                     "Content-Type": "application/zip",
+                    **bl.authorization_header(),
                 },
             )
             ## print(response.headers, response.raw)
