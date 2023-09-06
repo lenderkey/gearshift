@@ -13,3 +13,4 @@ def record_put(record:FileRecord, data:bytes, authorized:dict):
 
     bl.record_ingest(record, data=data)
     db.record_put(record)
+    bl.record_record(record, authorized=authorized, action="put")
