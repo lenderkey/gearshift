@@ -9,12 +9,14 @@ import db
 
 def pushed_json(raw_json:dict) -> dict:
     """
+    This is called SERVER side when the CLIENT sends a SyncRequest
     """
     out_sync_items = SyncRequest()
     in_sync_items = SyncRequest(**raw_json)
 
     for in_record in in_sync_items.records:
         ## just delete the record
+        print("INRECORD", in_record.filename, in_record.is_deleted)
         if in_record.is_deleted:
             db.record_delete(in_record)
             bl.record_delete(in_record)
