@@ -17,16 +17,8 @@ def dst_zip():
     context = Context.instance
 
     infod = {
-        "source": {
-            "root": context.src_root,
-            "host": context.src_host,
-            "user": context.src_user,
-            "pem": context.src_pem,
-        },
-        "destination": {
-            "root": context.dst_root,
-            "links": context.dst_link_root,
-        },
+        "doc_root": context.src_root,
+        "server_url": context.src_url,
     }
 
     print(yaml.dump(infod))

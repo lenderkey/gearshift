@@ -16,4 +16,5 @@ def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
 
         bl.record_put(record, data=data, authorized=authorized)
 
+    ## placeholder message
     return {"message": "Received Bytes", "length": len(raw_data)}
