@@ -2,10 +2,11 @@ import zipfile
 import io
 
 from Context import Context
+from structures import SyncRequest, Token
 import bl
 import db
 
-def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
+def pushed_zip(raw_data:bytes, token:Token) -> dict:
     """
     SERVER side when the CLIENT sends a ZIP with documents
     """
@@ -14,7 +15,7 @@ def pushed_zip(raw_data:bytes, authorized:dict) -> dict:
         data = zipper.read(dst_name)
         record = bl.data_analyze(dst_name, data=data)
 
-        bl.record_put(record, data=data, authorized=authorized)
+        bl.record_put(record, data=data, token=token)
 
     ## placeholder message
     return {"message": "Received Bytes", "length": len(raw_data)}

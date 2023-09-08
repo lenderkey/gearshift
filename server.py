@@ -5,6 +5,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 
 from Context import Context
+from structures import Token
+
 import db
 import bl
 
@@ -20,19 +22,19 @@ security = HTTPBearer()
 
 def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
     token_id = authorization.credentials
-    authorized = bl.authorize(token_id)
-    if authorized is None:
+    token = bl.authorize(token_id)
+    if token is None:
         raise HTTPException(status_code=401, detail="Invalid token")
     
     ## add additional info here - IP address, etc.
 
-    return authorized
+    return token
 
 @app.get("/docs/", tags=["secure"])
 async def download(
-    authorized: str = Depends(get_authorized),
+    token: str = Depends(get_authorized),
 ):
-    print("HERE:AUTHORIZED", authorized)
+    print("HERE:AUTHORIZED", token)
     try:
         return bl.pull_json()
     except Exception as e:
@@ -42,22 +44,22 @@ async def download(
 async def upload_bytes_or_json(
     request: Request,
     content_type: str = Header(None),
-    authorized: str = Depends(get_authorized),
+    token: str = Depends(get_authorized),
 ):
-    print("HERE:AUTHORIZED", authorized)
+    print("HERE:AUTHORIZED", token)
     context = Context.instance
 
     match content_type:
         case "application/json":
             try:
-                return bl.pushed_json(await request.json(), authorized=authorized)
+                return bl.pushed_json(await request.json(), token=token)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
         case "application/zip":
             try:
-                return bl.pushed_zip(await request.body(), authorized=authorized)
+                return bl.pushed_zip(await request.body(), token=token)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")

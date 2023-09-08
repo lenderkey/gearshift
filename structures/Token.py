@@ -3,7 +3,7 @@ import datetime
 
 @dataclasses.dataclass
 class Token:
-    token: str
+    token_id: str
     path: str
     email: str
     state: str = "A"
@@ -31,5 +31,5 @@ class Token:
                     value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
                 except ValueError:
                     value = datetime.datetime.fromisoformat(value)
-                    
+
                 setattr(self, key, value)

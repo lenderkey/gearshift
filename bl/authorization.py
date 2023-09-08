@@ -1,7 +1,7 @@
 import os
 
 from Context import Context
-from structures import FileRecord
+from structures import FileRecord, Token
 
 import logging as logger
 
@@ -14,7 +14,7 @@ def authorization_header() -> dict:
         "Authorization": "Bearer mysecrettoken",
     }
 
-def authorize(token_id:str) -> dict:
+def authorize(token_id:str) -> Token:
     if token_id != "mysecrettoken":
         return
     

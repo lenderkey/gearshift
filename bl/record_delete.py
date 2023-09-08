@@ -1,12 +1,12 @@
 import os
 
 from Context import Context
-from structures import FileRecord
+from structures import FileRecord, Token
 import db
 
 import logging as logger
 
-def record_delete(record:FileRecord, authorized:dict):
+def record_delete(record:FileRecord, token:Token):
     """
     """
     import bl
@@ -18,4 +18,4 @@ def record_delete(record:FileRecord, authorized:dict):
     except FileNotFoundError:
         pass
 
-    bl.record_record(record, authorized=authorized, action="delete")
+    bl.record_record(record, token=token, action="delete")
