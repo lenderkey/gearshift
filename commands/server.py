@@ -24,7 +24,7 @@ import db
 L = "server"
 
 @cli.command("server", help="Run Gearshift Server") # type: ignore
-def src_build():
+def server():
     """
     Example:
     ./gearshift server

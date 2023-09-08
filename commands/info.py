@@ -13,7 +13,7 @@ import yaml
 L = "info"
 
 @cli.command("info", help="tell me about this setup") # type: ignore
-def dst_zip():
+def info():
     context = Context.instance
 
     infod = {

@@ -24,7 +24,7 @@ L = "sweep"
 
 @cli.command("sweep", help="Build a Gearshift Database") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
-def src_build(dry_run):
+def sweep(dry_run):
     """
     Build a Gearshift Database
     

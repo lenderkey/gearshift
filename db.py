@@ -29,7 +29,19 @@ def setup() -> None:
             added TEXT NOT NULL,
             seen TEXT NOT NULL
         )''')
-
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS tokens (
+            token TEXT PRIMARY KEY, -- UUID
+            path TEXT NOT NULL DEFAULT "/",
+            state TEXT NOT NULL DEFAULT "A", -- "A": active, "D": deleted
+            email TEXT NOT NULL, -- account which owns token
+            data TEXT NOT NULL DEFAULT "{}", -- json data
+            added TEXT NOT NULL, -- isodatetime
+            seen TEXT NOT NULL, -- isodatetime
+            expires TEXT NOT NULL -- isodatetime
+    )''')
+ 
 def start() -> None:
     """
     Start a transaction
