@@ -76,9 +76,29 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         token.data,
         now,
         now,
-        token.expires,
+        helpers.format_datetime(token.expires),
     ))
     logger.debug(f"{L}: inserted/updated {token.token=}")
+
+def token_list():
+    query = "SELECT token, path, state, email, data, added, seen, expires FROM tokens"
+    params = []
+
+    cursor = Context.instance.cursor()
+
+    cursor.execute(query, params)
+    while row := cursor.fetchone():
+        token, path, state, email, data, added, seen, expires = row
+        yield Token.make(
+            token=token,
+            path=path,
+            state=state,
+            email=email,
+            data=data,
+            added=added,
+            seen=seen,
+            expires=expires,
+        )
 
 
 def record_get(record:FileRecord) -> FileRecord:

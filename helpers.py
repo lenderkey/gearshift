@@ -12,6 +12,7 @@ import re
 import hashlib
 import os
 import base64
+import datetime
 
 import logging as logger
 
@@ -126,6 +127,10 @@ def walker():
             yield filename
 
 def now():
-    from datetime import datetime
-    now = datetime.utcnow()
-    return now.isoformat()[:-3] + 'Z'
+    return format_datetime(datetime.datetime.utcnow())
+
+def format_datetime(dt):
+    if isinstance(dt, datetime.datetime):
+        return dt.isoformat()[:-3] + 'Z'
+    else:
+        return dt

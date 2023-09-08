@@ -15,4 +15,9 @@ L = "token-list"
 
 @cli.command("token-list", help="") # type: ignore
 def token_list():
-    pass
+    import db
+
+    db.setup()
+
+    for token in db.token_list():
+        print(token)
