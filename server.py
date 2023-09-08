@@ -32,12 +32,14 @@ async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(
         global server_connection
 
         if not server_connection:
-            print("CONNECTION", Context.instance.db_path)
             server_connection = sqlite3.connect(Context.instance.db_path)
 
         token_id = authorization.credentials
-        token = bl.authorize(token_id, connection=server_connection)
-        if token is None:
+        try:
+            token = bl.authorize(token_id, connection=server_connection)
+        except bl.TokenError:
+            logger.exception(f"token error: {token_id=}")
+
             raise HTTPException(status_code=401, detail="Invalid token")
 
         return token

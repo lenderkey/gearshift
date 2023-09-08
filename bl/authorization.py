@@ -1,10 +1,23 @@
 import os
 import sqlite3
+import datetime
 
 from Context import Context
 from structures import FileRecord, Token
 
 import logging as logger
+
+class TokenError(Exception):
+    pass
+
+class TokenExpired(TokenError):
+    pass
+
+class TokenNotFound(TokenError):
+    pass
+
+class TokenDeleted(TokenError):
+    pass
 
 def authorization_header() -> dict:
     """
@@ -21,13 +34,14 @@ def authorize(token_id:str, connection:sqlite3.Connection=None) -> Token:
     """
     import db
 
-    print("HERE:XXX", token_id)
     token = db.token_by_id(token_id, connection=connection)
-    print("HERE:YYY", token)
     if not token:
-        return None
+        raise TokenNotFound()
 
     if token.state != "A":
-        return None
+        raise TokenDeleted()
+
+    if token.expires < datetime.datetime.now():
+        raise TokenExpired()
 
     return token

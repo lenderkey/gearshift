@@ -60,6 +60,7 @@ def commit() -> None:
 
 def token_put(token:Token):
     """
+    XXX - need to be more clever with added
     """
     L = "db.token_put"
     
@@ -79,6 +80,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         helpers.format_datetime(token.expires),
     ))
     logger.debug(f"{L}: inserted/updated {token.token_id=}")
+
+    return token
 
 def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
     """
@@ -102,6 +105,7 @@ def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
         return
     
     token_id, path, state, email, data, added, seen, expires = row
+
     return Token.make(
         token_id=token_id,
         path=path,
