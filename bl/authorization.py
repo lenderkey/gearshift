@@ -14,8 +14,8 @@ def authorization_header() -> dict:
         "Authorization": "Bearer mysecrettoken",
     }
 
-def authorize(token:str) -> dict:
-    if token != "mysecrettoken":
+def authorize(token_id:str) -> dict:
+    if token_id != "mysecrettoken":
         return
     
     return {

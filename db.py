@@ -80,6 +80,31 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
     ))
     logger.debug(f"{L}: inserted/updated {token.token=}")
 
+def token_by_token(token:str) -> Token:
+    """
+    """
+    cursor = Context.instance.cursor()
+
+    query = "SELECT token, path, state, email, data, added, seen, expires FROM tokens WHERE token=?"
+    params = [ token ]
+
+    cursor.execute(query, params)
+    row = cursor.fetchone()
+    if not row:
+        return
+    
+    token, path, state, email, data, added, seen, expires = row
+    return Token.make(
+        token=token,
+        path=path,
+        state=state,
+        email=email,
+        data=data,
+        added=added,
+        seen=seen,
+        expires=expires,
+    )
+
 def token_list():
     query = "SELECT token, path, state, email, data, added, seen, expires FROM tokens"
     params = []

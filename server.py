@@ -19,8 +19,8 @@ import logging as logger
 security = HTTPBearer()
 
 def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
-    token = authorization.credentials
-    authorized = bl.authorize(token)
+    token_id = authorization.credentials
+    authorized = bl.authorize(token_id)
     if authorized is None:
         raise HTTPException(status_code=401, detail="Invalid token")
     
