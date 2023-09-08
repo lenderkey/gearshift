@@ -12,7 +12,7 @@ import time
 import sqlite3
 
 from Context import Context
-from structures.FileRecord import FileRecord
+from structures import FileRecord, Token
 import helpers
 
 import logging as logger
@@ -57,6 +57,29 @@ def commit() -> None:
 
     cursor = Context.instance.cursor()
     cursor.execute("COMMIT")
+
+def token_put(token:Token):
+    """
+    """
+    L = "db.token_put"
+    
+    cursor = Context.instance.cursor()
+    now = helpers.now()
+
+    cursor.execute("""
+INSERT OR REPLACE INTO tokens (token, path, state, email, data, added, seen, expires)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+        token.token,
+        token.path,
+        token.state,
+        token.email,
+        token.data,
+        now,
+        now,
+        token.expires,
+    ))
+    logger.debug(f"{L}: inserted/updated {token.token=}")
+
 
 def record_get(record:FileRecord) -> FileRecord:
     """
@@ -138,7 +161,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)""", (
     ))
     logger.debug(f"{L}: deleted {record.filename=}")
 
-def list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
+def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
     """
     Return a list of records
     """

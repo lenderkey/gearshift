@@ -6,7 +6,7 @@ import db
 def pull_json() -> dict | SyncRequest:
     out_sync_items = SyncRequest()
 
-    for item in db.list():
+    for item in db.record_list():
         out_sync_items.records.append(item)
 
     return out_sync_items

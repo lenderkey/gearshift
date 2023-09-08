@@ -31,7 +31,7 @@ def sync():
 
     started = time.time()
     db.setup()
-    iterator = db.list(is_synced=False)
+    iterator = db.record_list(is_synced=False)
 
     db.start()
 
