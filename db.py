@@ -60,7 +60,7 @@ def commit() -> None:
 
 def token_put(token:Token):
     """
-    XXX - need to be more clever with added
+    XXX - need to be more clever with 'added'
     """
     L = "db.token_put"
     
@@ -93,15 +93,7 @@ def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
 
     cursor.execute(query, params)
     row = cursor.fetchone()
-    print("HERE:ROW", row, query, params)
     if not row:
-        print("A")
-        query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens"
-        cursor.execute(query)
-        for row in cursor.fetchall():
-            print("HERE:HAS", row[0])
-        print("B")
-
         return
     
     token_id, path, state, email, data, added, seen, expires = row

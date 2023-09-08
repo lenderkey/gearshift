@@ -70,6 +70,10 @@ class Context:
     def src_pem(self):  
         return self.get("src.pem", required=False)
     
+    @property
+    def src_token_id(self):  
+        return self.get("src.token_id", required=False)
+    
     def src_path(self, src_name):
         return os.path.join(self.src_root, src_name)
     

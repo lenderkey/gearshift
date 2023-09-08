@@ -25,7 +25,7 @@ def authorization_header() -> dict:
     """
 
     return {
-        "Authorization": "Bearer 12228912-1feb-4218-9532-cee4b65d1bd5",
+        "Authorization": f"Bearer {Context.instance.src_token_id}",
     }
 
 def authorize(token_id:str, connection:sqlite3.Connection=None) -> Token:

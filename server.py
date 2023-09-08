@@ -50,7 +50,7 @@ async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(
 async def download(
     token: str = Depends(get_authorized),
 ):
-    print("HERE:AUTHORIZED", token)
+    # print("HERE:AUTHORIZED", token)
     try:
         return bl.pull_json()
     except Exception as e:
@@ -62,7 +62,7 @@ async def upload_bytes_or_json(
     content_type: str = Header(None),
     token: str = Depends(get_authorized),
 ):
-    print("HERE:AUTHORIZED", token)
+    # print("HERE:AUTHORIZED", token)
     context = Context.instance
 
     match content_type:
