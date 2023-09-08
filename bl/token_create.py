@@ -12,7 +12,7 @@ def token_create(email:str, path:str, expires:int):
     logger.info(f"{L}: {email=} {path=} {expires=}")
 
     token = Token(
-        token=str(uuid.uuid4()),
+        token_id=str(uuid.uuid4()),
         path=path,
         email=email,
         expires=datetime.datetime.now() + datetime.timedelta(days=expires),   

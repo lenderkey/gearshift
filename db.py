@@ -80,22 +80,30 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
     ))
     logger.debug(f"{L}: inserted/updated {token.token_id=}")
 
-def token_by_token(token:str) -> Token:
+def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
     """
     """
-    cursor = Context.instance.cursor()
+    cursor = connection and connection.cursor() or Context.instance.cursor()
 
-    query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens WHERE token=?"
-    params = [ token ]
+    query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens WHERE token_id=?"
+    params = [ token_id ]
 
     cursor.execute(query, params)
     row = cursor.fetchone()
+    print("HERE:ROW", row, query, params)
     if not row:
+        print("A")
+        query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens"
+        cursor.execute(query)
+        for row in cursor.fetchall():
+            print("HERE:HAS", row[0])
+        print("B")
+
         return
     
     token_id, path, state, email, data, added, seen, expires = row
     return Token.make(
-        token=token_id,
+        token_id=token_id,
         path=path,
         state=state,
         email=email,
@@ -115,7 +123,7 @@ def token_list():
     while row := cursor.fetchone():
         token_id, path, state, email, data, added, seen, expires = row
         yield Token.make(
-            token=token_id,
+            token_id=token_id,
             path=path,
             state=state,
             email=email,

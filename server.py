@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request, Header, HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-
 import os
+import asyncio
+import sqlite3
 
 from Context import Context
 from structures import Token
@@ -12,6 +13,12 @@ import bl
 
 app = FastAPI()
 
+server_connection = None
+
+async def run_in_threadpool(func, *args, **kwargs):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, func, *args, **kwargs)
+
 GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
 Context.setup(cfg_file=GEARSHIFT_CFG)
 db.setup()
@@ -20,15 +27,22 @@ import logging as logger
 
 security = HTTPBearer()
 
-def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
-    token_id = authorization.credentials
-    token = bl.authorize(token_id)
-    if token is None:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    ## add additional info here - IP address, etc.
+async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
+    def execute_query():
+        global server_connection
 
-    return token
+        if not server_connection:
+            print("CONNECTION", Context.instance.db_path)
+            server_connection = sqlite3.connect(Context.instance.db_path)
+
+        token_id = authorization.credentials
+        token = bl.authorize(token_id, connection=server_connection)
+        if token is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        return token
+
+    return await run_in_threadpool(execute_query)
 
 @app.get("/docs/", tags=["secure"])
 async def download(
