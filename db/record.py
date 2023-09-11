@@ -17,11 +17,16 @@ import logging as logger
 
 def record_get(record:FileRecord) -> FileRecord:
     """
+    Retrieve a record where the filename and data_hash match.
     """
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, key_hash, size, is_synced, is_deleted, added FROM records WHERE filename=? AND data_hash=?"
+    query = """\
+SELECT 
+    filename, data_hash, key_hash, size, is_synced, is_deleted, added 
+FROM records 
+WHERE filename=? AND data_hash=?"""
 
     cursor.execute(query, (record.filename, record.data_hash))
     row = cursor.fetchone()
@@ -62,7 +67,8 @@ def record_put(record:FileRecord) -> FileRecord:
     record.cleanup()
 
     cursor.execute("""
-INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+INSERT OR REPLACE INTO records 
+(filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         not record.is_deleted and record.data_hash or "", 
@@ -100,11 +106,21 @@ def record_delete(record:FileRecord) -> FileRecord:
     now = helpers.now()
 
     record = record.clone()
-    record.added = now
+
+    ## keep 'added'
+    query = "SELECT added FROM records WHERE filename=?"
+    cursor.execute(query, (record.filename, ))
+    row = cursor.fetchone()
+    if row:
+        record.added, = row
+    else:
+        record.added = now
+    
     record.cleanup()
 
     cursor.execute("""
-INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+INSERT OR REPLACE INTO records 
+(filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         "", 
@@ -119,7 +135,13 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
 
     return record
 
-def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None, key_hash:str=None):
+def record_list(
+    is_synced:bool=None, is_deleted:bool=None, 
+    since_seen:str=None, since_added:str=None, 
+    key_hash:str=None, 
+    order_by:str=None,
+    order_dir:str="ASC",
+):
     """
     Return a list of records
     """
@@ -144,14 +166,20 @@ def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, 
 
     if since_seen is not None:
         extras.append("seen > ?")
-        params.append(since_seen)
+        params.append(helpers.format_datetime(since_seen))
 
     if since_added is not None:
         extras.append("added > ?")
-        params.append(since_added)
+        params.append(helpers.format_datetime(since_added))
 
     if extras:
         query += " WHERE " + " AND ".join(extras)
+
+    if order_by:
+        query += f" ORDER BY {order_by}"
+
+        if order_dir:
+            query += " " + order_dir
 
     # Execute the query and fetch the first record
     cursor.execute(query, params)
