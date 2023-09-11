@@ -78,31 +78,24 @@ async def upload_bytes_or_json(
     connection = Connection.from_request(request)
 
     db.setup()
-    try:
-        print("START")
-        db.start()
+    match content_type:
+        case "application/json":
+            try:
+                return bl.pushed_json(await request.json(), token=token, connection=connection)
+            except Exception as e:
+                logger.exception(f"unexpected error")
+                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+            
+        case "application/zip":
+            try:
+                return bl.pushed_zip(await request.body(), token=token, connection=connection)
+            except Exception as e:
+                logger.exception(f"unexpected error")
+                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
-        match content_type:
-            case "application/json":
-                try:
-                    return bl.pushed_json(await request.json(), token=token, connection=connection)
-                except Exception as e:
-                    logger.exception(f"unexpected error")
-                    raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
-                
-            case "application/zip":
-                try:
-                    return bl.pushed_zip(await request.body(), token=token, connection=connection)
-                except Exception as e:
-                    logger.exception(f"unexpected error")
-                    raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
-
-            case _:
-                logger.error(f"Unsupported Content-Type header: {content_type}")
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unsupported Content-Type header: {content_type}",
-                )
-    finally:
-        print("COMMIT")
-        db.commit()
+        case _:
+            logger.error(f"Unsupported Content-Type header: {content_type}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported Content-Type header: {content_type}",
+            )

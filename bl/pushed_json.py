@@ -15,6 +15,8 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
     in_sync_items = SyncRequest(**raw_json)
 
     for in_record in in_sync_items.records:
+        db.start()
+
         if in_record.is_deleted:
             bl.record_delete(in_record, token=token, connection=connection)
         elif current_record := db.record_get(in_record):
@@ -23,6 +25,8 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
             in_record.is_synced = False
             out_sync_items.records.append(in_record)
             continue
+
+        db.commit()
 
         '''
         Right here we can add a big efficiency by looking for a

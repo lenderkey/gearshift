@@ -44,22 +44,31 @@ def setup() -> None:
             expires TEXT NOT NULL -- isodatetime
     )''')
  
+depth = 0
+
 def start() -> None:
     """
     Start a transaction
     """
+    global depth
 
     cursor = Context.instance.cursor()
-    cursor.execute("BEGIN TRANSACTION")
+    if depth == 0:
+        cursor.execute("BEGIN TRANSACTION")
+        depth += 1
 
 def commit() -> None:
     """
     Commit a transaction
     """
+    global depth
 
     cursor = Context.instance.cursor()
-    cursor.execute("COMMIT")
-    cursor.connection.commit()
+
+    depth -= 1
+    if depth == 0:
+        cursor.execute("COMMIT")
+        cursor.connection.commit()
 
 def token_put(token:Token):
     """
