@@ -12,6 +12,10 @@ def pull_json(since_added:str|datetime.datetime|None=None, limit:int=None, conne
 
     count = 0
     for item in db.record_list(order_by="added", since_added=since_added, limit=limit):
+        ## none of your business, client
+        item.key_hash = None
+        item.is_synced = None
+
         out_sync_items.records.append(item)
 
         count += 1
