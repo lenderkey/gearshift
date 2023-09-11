@@ -10,6 +10,8 @@
 
 import os
 import dataclasses
+import datetime
+import helpers
 
 import logging as logger
 
@@ -21,16 +23,30 @@ class FileRecord:
     size: int = 0
     is_synced: bool = False
     is_deleted: bool = False
-    added: str = None
+    added: datetime.datetime = None
 
     @classmethod
-    def make(self, filename: str, **ad):
-        return FileRecord(filename=filename, **ad)
+    def make(self, filename: str, **ad) -> "FileRecord":
+        obj = FileRecord(filename=filename, **ad)
+        obj.cleanup()
+
+        return obj
     
     @classmethod
-    def make_deleted(self, filename: str, **ad):
-        return FileRecord(filename=filename, is_deleted=True)
+    def make_deleted(self, filename: str, **ad) -> "FileRecord":
+        obj = FileRecord(filename=filename, is_deleted=True)
+        obj.cleanup()
+
+        return obj
     
+
+    def cleanup(self) -> None:
+        ## total hack
+        for key in [ "added", ]:
+            value = getattr(self, key)
+            if isinstance(value, str):
+                setattr(self, key, helpers.to_datetime(value))
+
     @property
     def filepath(self) -> str:
         from Context import Context
@@ -45,3 +61,7 @@ class FileRecord:
     
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
+
+    def clone(self) -> "FileRecord":
+        return FileRecord.make(**self.to_dict())
+

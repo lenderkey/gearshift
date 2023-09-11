@@ -173,7 +173,7 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
     logger.debug(f"{L}: touched {record.filename=}")
     return False
 
-def record_put(record:FileRecord) -> bool:
+def record_put(record:FileRecord) -> FileRecord:
     """
     NEED TO MAKE THIS MULTIPLE CALLS BECAUSE OF added
     """
@@ -181,6 +181,10 @@ def record_put(record:FileRecord) -> bool:
 
     cursor = Context.instance.cursor()
     now = helpers.now()
+
+    record = record.clone()
+    record.added = now
+    record.cleanup()
 
     cursor.execute("""
 INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
@@ -191,18 +195,24 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         not record.is_deleted and record.size or 0, 
         int(record.is_synced), 
         int(record.is_deleted),
-        now,
-        now,
+        helpers.format_datetime(record.added),
+        helpers.format_datetime(now),
     ))
     logger.debug(f"{L}: inserted/updated {record.filename=}")
 
-def record_delete(record:FileRecord) -> bool:
+    return record
+
+def record_delete(record:FileRecord) -> FileRecord:
     """
     """
     L = "db.record_put"
 
     cursor = Context.instance.cursor()
     now = helpers.now()
+
+    record = record.clone()
+    record.added = now
+    record.cleanup()
 
     cursor.execute("""
 INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
@@ -213,10 +223,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         0, 
         record.is_synced, 
         True,
-        now,
-        now,
+        helpers.format_datetime(record.added),
+        helpers.format_datetime(now),
     ))
     logger.debug(f"{L}: deleted {record.filename=}")
+
+    return record
 
 def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None, key_hash:str=None):
     """

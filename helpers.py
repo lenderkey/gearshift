@@ -126,12 +126,34 @@ def walker():
 
             yield filename
 
-def now():
+def now() -> str:
     return format_datetime(datetime.datetime.utcnow())
 
-def format_datetime(dt):
-    if isinstance(dt, datetime.datetime):
+def format_datetime(dt:str|datetime.datetime|None) -> str|None:
+    if dt is None:
+        return None
+    elif isinstance(dt, datetime.datetime):
         return dt.isoformat()[:-3] + 'Z'
-    else:
+    elif isinstance(dt, str):
         return dt
+    else:
+        raise TypeError(f"expected datetime or str, not {type(dt)}")
 
+def to_datetime(dt:str|datetime.datetime|None) -> datetime.datetime|None:
+    if dt is None:
+        return None
+    elif isinstance(dt, str):
+        try:
+            return datetime.datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            return datetime.datetime.fromisoformat(dt)
+    elif isinstance(dt, datetime.datetime):
+        return dt
+    else:
+        raise TypeError(f"expected datetime or str, not {type(dt)}")
+
+def default_serializer(o):
+    if isinstance(o, datetime.datetime):
+        return format_datetime(o)
+    
+    raise TypeError("Object of type datetime is not JSON serializable")

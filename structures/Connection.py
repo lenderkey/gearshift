@@ -11,7 +11,7 @@ class Connection:
     headers: dict = dataclasses.field(default_factory=dict)
 
     @classmethod
-    def make(cls, **kwargs: dict):
+    def make(cls, **kwargs: dict) -> "Connection":
         """
         Prefer this to the constructor. It will only pass known args.
         """
@@ -30,3 +30,7 @@ class Connection:
     
     def to_dict(self) -> dict:
         return dataclasses.asdict(self)
+
+    def clone(self) -> "Connection":
+        return Connection.make(**self.to_dict())
+ 

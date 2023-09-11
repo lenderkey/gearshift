@@ -1,6 +1,8 @@
 import dataclasses
 import datetime
 
+import helpers
+
 @dataclasses.dataclass
 class Token:
     token_id: str
@@ -14,7 +16,7 @@ class Token:
     expires: datetime.datetime = None
 
     @classmethod
-    def make(cls, **kwargs: dict):
+    def make(cls, **kwargs: dict) -> "Token":
         """
         Prefer this to the constructor. It will only pass known args.
         """
@@ -23,24 +25,22 @@ class Token:
 
         return obj
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         ## total hack
         for key in [ "added", "seen", "expires" ]:
             value = getattr(self, key)
             if isinstance(value, str):
-                try:
-                    value = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
-                except ValueError:
-                    value = datetime.datetime.fromisoformat(value)
+                setattr(self, key, helpers.to_datetime(value))
 
-                setattr(self, key, value)
+    def clone(self) -> "Token":
+        return Token.make(**self.to_dict())
 
     def to_dict(self) -> dict:
         import helpers
 
         d = dataclasses.asdict(self)
-        d["added"] = self.added and helpers.format_datetime(self.added)
-        d["seen"] = self.added and helpers.format_datetime(self.seen)
-        d["expires"] = self.added and helpers.format_datetime(self.expires)
+        d["added"] = helpers.format_datetime(self.added)
+        d["seen"] = helpers.format_datetime(self.seen)
+        d["expires"] = helpers.format_datetime(self.expires)
 
         return d

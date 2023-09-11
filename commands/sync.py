@@ -64,7 +64,7 @@ def sync():
             
         response = requests.post(
             "http://127.0.0.1:8000/docs/",
-            json=out_sync_items.model_dump(),
+            json=out_sync_items.model_dump(mode="json"),
             headers={
                 **bl.authorization_header(),
             },
