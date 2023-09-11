@@ -23,6 +23,7 @@ def setup() -> None:
         CREATE TABLE IF NOT EXISTS records (
             filename TEXT PRIMARY KEY,
             data_hash TEXT,
+            key_hash TEXT NOT NULL DEFAULT "",
             size INTEGER,
             is_synced INTEGER,
             is_deleted INTEGER,
@@ -140,18 +141,19 @@ def record_get(record:FileRecord) -> FileRecord:
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records WHERE filename=? AND data_hash=?"
+    query = "SELECT filename, data_hash, key_hash, size, is_synced, is_deleted, added FROM records WHERE filename=? AND data_hash=?"
 
     cursor.execute(query, (record.filename, record.data_hash))
     row = cursor.fetchone()
     if not row:
         return
     
-    filename, data_hash, size, is_synced, is_deleted, added = row
+    filename, data_hash, key_hash, size, is_synced, is_deleted, added = row
 
     return FileRecord.make(
         filename=filename,
         data_hash=data_hash,
+        key_hash=key_hash,
         size=size,
         added=added,
         is_synced=bool(is_synced),
@@ -181,10 +183,11 @@ def record_put(record:FileRecord) -> bool:
     now = helpers.now()
 
     cursor.execute("""
-INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
-VALUES (?, ?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         not record.is_deleted and record.data_hash or "", 
+        not record.is_deleted and record.key_hash or "", 
         not record.is_deleted and record.size or 0, 
         int(record.is_synced), 
         int(record.is_deleted),
@@ -202,9 +205,10 @@ def record_delete(record:FileRecord) -> bool:
     now = helpers.now()
 
     cursor.execute("""
-INSERT OR REPLACE INTO records (filename, data_hash, size, is_synced, is_deleted, seen, added) 
-VALUES (?, ?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO records (filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
+        "", 
         "", 
         0, 
         record.is_synced, 
@@ -214,14 +218,14 @@ VALUES (?, ?, ?, ?, ?, ?, ?)""", (
     ))
     logger.debug(f"{L}: deleted {record.filename=}")
 
-def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None):
+def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, since_added:str=None, key_hash:str=None):
     """
     Return a list of records
     """
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, size, is_synced, is_deleted, added FROM records"
+    query = "SELECT filename, data_hash, key_hash, size, is_synced, is_deleted, added FROM records"
     params = []
 
     extras = []
@@ -232,6 +236,10 @@ def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, 
     if is_deleted is not None:
         extras.append("is_deleted = ?")
         params.append(int(is_deleted))
+
+    if key_hash is not None:
+        extras.append("key_hash = ?")
+        params.append(key_hash)
 
     if since_seen is not None:
         extras.append("seen >= ?")
@@ -247,11 +255,12 @@ def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, 
     # Execute the query and fetch the first record
     cursor.execute(query, params)
     while row := cursor.fetchone():
-        filename, data_hash, size, is_synced, is_deleted, added = row
+        filename, data_hash, key_hash, size, is_synced, is_deleted, added = row
 
         yield FileRecord.make(
             filename=filename,
             data_hash=data_hash,
+            key_hash=key_hash,
             size=size,
             is_synced=bool(is_synced),
             is_deleted=bool(is_deleted),

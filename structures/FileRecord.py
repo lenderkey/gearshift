@@ -17,6 +17,7 @@ import logging as logger
 class FileRecord:
     filename: str
     data_hash: str
+    key_hash: str = ""
     size: int = 0
     is_synced: bool = False
     is_deleted: bool = False
