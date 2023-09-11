@@ -190,14 +190,6 @@ class Context:
                 
         raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
     
-
-'''
-keys:
-  file: "~/.lenderkey/keys/1.key"
-  hash: "Zdl_YEUEGi32D241xVUdxsZG25lEFUauNkTSRXgd-mU"
-'''
-
-
 if __name__ == '__main__':
     context = Context()
     ## print(context.db)
