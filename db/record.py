@@ -181,6 +181,8 @@ def record_list(
         if order_dir:
             query += " " + order_dir
 
+    print(query, params)
+
     # Execute the query and fetch the first record
     cursor.execute(query, params)
     while row := cursor.fetchone():

@@ -18,6 +18,8 @@ def record_put(record:FileRecord, data:bytes, token:Token, connection:Connection
     if key_hash:
         record.key_hash = key_hash
 
+    db.start()
     bl.record_ingest(record, data=data)
     record = db.record_put(record)
     bl.record_record(record, token=token, connection=connection, action="put")
+    db.commit()
