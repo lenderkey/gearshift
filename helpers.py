@@ -133,7 +133,7 @@ def format_datetime(dt:str|datetime.datetime|None) -> str|None:
     if dt is None:
         return None
     elif isinstance(dt, datetime.datetime):
-        return dt.isoformat()[:-3] + 'Z'
+        return dt.isoformat()
     elif isinstance(dt, str):
         return dt
     else:
@@ -143,10 +143,7 @@ def to_datetime(dt:str|datetime.datetime|None) -> datetime.datetime|None:
     if dt is None:
         return None
     elif isinstance(dt, str):
-        try:
-            return datetime.datetime.strptime(dt, '%Y-%m-%dT%H:%M:%S.%fZ')
-        except ValueError:
-            return datetime.datetime.fromisoformat(dt)
+        return datetime.datetime.fromisoformat(dt)
     elif isinstance(dt, datetime.datetime):
         return dt
     else:
