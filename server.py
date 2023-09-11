@@ -46,7 +46,7 @@ async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(
 
     return await run_in_threadpool(execute_query)
 
-@app.get("/docs/", tags=["secure"])
+@app.get("/", tags=["secure"])
 async def download(
     request: Request,
     token: Token = Depends(get_authorized),
@@ -57,7 +57,7 @@ async def download(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 
-@app.post("/docs/", tags=["secure"])
+@app.post("/", tags=["secure"])
 async def upload_bytes_or_json(
     request: Request,
     content_type: str = Header(None),

@@ -63,7 +63,7 @@ def sync():
                 break
             
         response = requests.post(
-            "http://127.0.0.1:8000/docs/",
+            Context.instance.src_url,
             json=out_sync_items.model_dump(mode="json"),
             headers={
                 **bl.authorization_header(),
