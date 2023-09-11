@@ -2,3 +2,4 @@ pyyaml
 click
 fastapi[all]
 requests
+cryptography

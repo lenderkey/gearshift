@@ -18,7 +18,7 @@ L = "token-create"
 @click.option("--path", default="/", help="path")
 @click.option("--expires", default=730, type=int, help="expires (in days from now)")
 @click.option("--token-id", default=None, help="path")
-def token_create(email:str, path:str, expires:int, token_id:str=None):
+def _(email:str, path:str, expires:int, token_id:str=None):
     import bl
     import db
 

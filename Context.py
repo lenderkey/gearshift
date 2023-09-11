@@ -165,6 +165,32 @@ class Context:
 
         logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
         return True
+    
+    def server_key(self, keyhash:str=None) -> bytes:
+        """
+        This is the key for encrypting/decrypting files.
+
+        We allow the possibility for multiple keys
+        """
+        keys_filename = self.get("keys.file", required=True)
+        keys_filename = self.resolve_path(keys_filename)
+        keys_hash = keyhash or self.get("keys.hash", required=True)
+
+        with open(keys_filename, "rb") as fin:
+            for key in fin.read.split(b"\n"):
+                this_hash = helpers.sha256_data(key)
+                if this_hash == keys_hash:
+                    return key
+                
+        raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+    
+
+'''
+keys:
+  file: "~/.lenderkey/keys/1.key"
+  hash: "Zdl_YEUEGi32D241xVUdxsZG25lEFUauNkTSRXgd-mU"
+'''
+
 
 if __name__ == '__main__':
     context = Context()
