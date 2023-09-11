@@ -1,2 +1,2 @@
-./gearshift --cfg ~/.lenderkey/gearshift-server.yaml server 
+./gearshift --debug --cfg ~/.lenderkey/gearshift-server.yaml server 
 

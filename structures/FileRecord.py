@@ -41,3 +41,6 @@ class FileRecord:
         from Context import Context
 
         return Context.instance.dst_link_path(self.data_hash)
+    
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)

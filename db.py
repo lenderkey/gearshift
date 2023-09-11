@@ -164,7 +164,7 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
         now,
         record.filename,
     ))                     
-    logger.debug(f"{L}: skipping {record.filename=}")
+    logger.debug(f"{L}: touched {record.filename=}")
     return False
 
 def record_put(record:FileRecord) -> bool:
@@ -263,7 +263,7 @@ def mark_deleted(cutoff:float, force:bool=False):
     try:            
         if force:
             cursor.execute('''
-                UPDATE records SET is_deleted = ? WHERE seen < ? AND is_deleted = ?
+                UPDATE records SET is_deleted = ?, size = 0 WHERE seen < ? AND is_deleted = ?
             ''', (True, cutoff, False)) 
 
             return cursor.rowcount

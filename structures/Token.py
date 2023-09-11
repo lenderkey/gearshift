@@ -33,3 +33,11 @@ class Token:
                     value = datetime.datetime.fromisoformat(value)
 
                 setattr(self, key, value)
+
+    def to_dict(self) -> dict:
+        import helpers
+
+        d = dataclasses.asdict(self)
+        d["added"] = self.added and helpers.format_datetime(self.added)
+        d["seen"] = self.added and helpers.format_datetime(self.seen)
+        d["expires"] = self.added and helpers.format_datetime(self.expires)

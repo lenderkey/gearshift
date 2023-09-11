@@ -3,11 +3,11 @@ import zipfile
 import io
 
 from Context import Context
-from structures import SyncRequest, Token
+from structures import SyncRequest, Token, Connection
 import bl
 import db
 
-def pushed_json(raw_json:dict, token:Token) -> dict:
+def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
     """
     SERVER side when the CLIENT sends a SyncRequest
     """
@@ -16,7 +16,7 @@ def pushed_json(raw_json:dict, token:Token) -> dict:
 
     for in_record in in_sync_items.records:
         if in_record.is_deleted:
-            bl.record_delete(in_record, token=token)
+            bl.record_delete(in_record, token=token, connection=connection)
         elif current_record := db.record_get(in_record):
             db.record_touch(in_record)
         else:

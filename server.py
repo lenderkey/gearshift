@@ -6,7 +6,7 @@ import asyncio
 import sqlite3
 
 from Context import Context
-from structures import Token
+from structures import Token, Connection
 
 import db
 import bl
@@ -27,7 +27,7 @@ import logging as logger
 
 security = HTTPBearer()
 
-async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)):
+async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)) -> Token:
     def execute_query():
         global server_connection
 
@@ -48,9 +48,10 @@ async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(
 
 @app.get("/docs/", tags=["secure"])
 async def download(
-    token: str = Depends(get_authorized),
+    request: Request,
+    token: Token = Depends(get_authorized),
 ):
-    # print("HERE:AUTHORIZED", token)
+    connection = Connection.from_request(request)
     try:
         return bl.pull_json()
     except Exception as e:
@@ -60,22 +61,23 @@ async def download(
 async def upload_bytes_or_json(
     request: Request,
     content_type: str = Header(None),
-    token: str = Depends(get_authorized),
+    token: Token = Depends(get_authorized),
 ):
     # print("HERE:AUTHORIZED", token)
     context = Context.instance
+    connection = Connection.from_request(request)
 
     match content_type:
         case "application/json":
             try:
-                return bl.pushed_json(await request.json(), token=token)
+                return bl.pushed_json(await request.json(), token=token, connection=connection)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
         case "application/zip":
             try:
-                return bl.pushed_zip(await request.body(), token=token)
+                return bl.pushed_zip(await request.body(), token=token, connection=connection)
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
