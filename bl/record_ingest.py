@@ -16,10 +16,17 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
 
     Note that this is only used Server / Destination side. 
     """
-    L = "Context.record_ingest"
+    L = "bl.record_ingest"
 
     data_hash = helpers.sha256_data(data)
     assert data_hash == record.data_hash
+
+    write_data = data
+
+    if record.key_hash:
+        from cryptography.fernet import Fernet
+        cipher_suite = Fernet(Context.instance.server_key(record.key_hash))
+        write_data = cipher_suite.encrypt(data)
 
     with lock:
         ## make the link file
@@ -33,7 +40,7 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
             try:
                 link_filename_tmp = linkpath + ".tmp"
                 with open(link_filename_tmp, "wb") as fout:
-                    fout.write(data)
+                    fout.write(write_data)
             except IOError as x:
                 logger.error(f"{L}: {x} writing {link_filename_tmp=}")
 

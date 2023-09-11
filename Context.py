@@ -183,7 +183,7 @@ class Context:
         keys_hash = keyhash or self.get("keys.hash", required=True)
 
         with open(keys_filename, "rb") as fin:
-            for key in fin.read.split(b"\n"):
+            for key in fin.read().split(b"\n"):
                 this_hash = helpers.sha256_data(key)
                 if this_hash == keys_hash:
                     return key
