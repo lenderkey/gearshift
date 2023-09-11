@@ -22,12 +22,13 @@ def record_record(record:FileRecord, token:Token, connection:Connection, action:
             tokend = token.to_dict()
             del tokend["token_id"] ## not for you Jen
 
-            json.dump({
+            str = json.dumps({
                 "action": action,
                 "record": record.to_dict(),
                 "token": tokend,
                 "connection": connection.to_dict(),
-            }, fout, default=helpers.default_serializer)
+            }, default=helpers.default_serializer)
+            fout.write(str)
             fout.write("\n")
 
         logger.debug(f"record_record: {record.filename} in {record_path}")

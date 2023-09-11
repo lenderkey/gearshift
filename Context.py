@@ -89,8 +89,8 @@ class Context:
         
     #     return os.path.join(self.dst_root, ".links")
         
-    def dst_link_path(self, hash) -> str:
-       return os.path.join(self.src_root, ".links", hash[:2], hash[2:4], hash)
+    def dst_link_path(self, key_hash:str, data_hash:str) -> str:
+       return os.path.join(self.src_root, ".links", key_hash or "plaintext", data_hash[:2], data_hash[2:4], data_hash)
 
     # def dst_store_path(self, filename) -> str:
     #     assert not os.path.isabs(filename)
@@ -165,6 +165,12 @@ class Context:
 
         logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
         return True
+    
+    def server_key_hash(self) -> str:
+        """
+        The current key_hash, or None
+        """
+        return self.get("keys.hash", required=False) or None
     
     def server_key(self, keyhash:str=None) -> bytes:
         """

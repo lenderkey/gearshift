@@ -11,7 +11,7 @@ lock = threading.Lock()
 
 def record_ingest(record:FileRecord, data:bytes) -> None:
     """
-    This will create a link file (based on hash), and then link the destination
+    This will create a link file (based on hashES), and then link the destination
     file to the link file.
 
     Note that this is only used Server / Destination side. 
