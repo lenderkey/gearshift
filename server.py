@@ -71,28 +71,38 @@ async def upload_bytes_or_json(
     content_type: str = Header(None),
     token: Token = Depends(get_authorized),
 ):
+    import db
+
     # print("HERE:AUTHORIZED", token)
     context = Context.instance
     connection = Connection.from_request(request)
 
-    match content_type:
-        case "application/json":
-            try:
-                return bl.pushed_json(await request.json(), token=token, connection=connection)
-            except Exception as e:
-                logger.exception(f"unexpected error")
-                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
-            
-        case "application/zip":
-            try:
-                return bl.pushed_zip(await request.body(), token=token, connection=connection)
-            except Exception as e:
-                logger.exception(f"unexpected error")
-                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+    db.setup()
+    try:
+        print("START")
+        db.start()
 
-        case _:
-            logger.error(f"Unsupported Content-Type header: {content_type}")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported Content-Type header: {content_type}",
-            )
+        match content_type:
+            case "application/json":
+                try:
+                    return bl.pushed_json(await request.json(), token=token, connection=connection)
+                except Exception as e:
+                    logger.exception(f"unexpected error")
+                    raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+                
+            case "application/zip":
+                try:
+                    return bl.pushed_zip(await request.body(), token=token, connection=connection)
+                except Exception as e:
+                    logger.exception(f"unexpected error")
+                    raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+
+            case _:
+                logger.error(f"Unsupported Content-Type header: {content_type}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported Content-Type header: {content_type}",
+                )
+    finally:
+        print("COMMIT")
+        db.commit()

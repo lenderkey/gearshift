@@ -59,6 +59,7 @@ def commit() -> None:
 
     cursor = Context.instance.cursor()
     cursor.execute("COMMIT")
+    cursor.connection.commit()
 
 def token_put(token:Token):
     """
