@@ -96,7 +96,6 @@ UPDATE records SET seen = ? WHERE filename = ?""", (
     logger.debug(f"{L}: touched {record.filename=}")
     return False
 
-
 def record_delete(record:FileRecord) -> FileRecord:
     """
     """

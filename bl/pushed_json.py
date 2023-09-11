@@ -17,6 +17,7 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
     for in_record in in_sync_items.records:
         db.start()
 
+        print("HERE:in_record", in_record)
         if in_record.is_deleted:
             bl.record_delete(in_record, token=token, connection=connection)
         elif current_record := db.record_get(in_record):
@@ -36,5 +37,4 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
         access to by hash.
         '''
 
-    print("Z")
     return out_sync_items

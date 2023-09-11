@@ -11,6 +11,10 @@ from structures import Token, Connection
 import db
 import bl
 
+import logging as logger
+logger.basicConfig(level=logger.DEBUG)
+
+
 app = FastAPI()
 
 server_connection = None
@@ -22,8 +26,6 @@ async def run_in_threadpool(func, *args, **kwargs):
 GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
 Context.setup(cfg_file=GEARSHIFT_CFG)
 db.setup()
-
-import logging as logger
 
 security = HTTPBearer()
 

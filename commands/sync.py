@@ -25,14 +25,20 @@ logger = logging.getLogger(__name__)
 
 def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
     logger.info(f"{L}: do up")
+
     started = time.time()
+
     db.setup()
     iterator = db.record_list(is_synced=False)
 
     db.start()
 
+    ncycles = 0
+    nrecords = 0
+
     out_record = next(iterator, None)
     while out_record:
+        ncycles += 1
         out_sync_items = SyncRequest()
 
         count = 0
@@ -42,6 +48,9 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
         while out_record:
             out_sync_items.records.append(out_record)
             outd[out_record.filename] = out_record
+            nrecords += 1
+
+            print("OUT", out_record)
 
             count += 1
             size += out_record.size
@@ -146,8 +155,7 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
 
     db.commit()
 
-
-    logger.info(f"{L}: finished {time.time() - started:.4f}s")
+    logger.info(f"{L}: finished {time.time() - started:.4f}s {ncycles=} {nrecords=}")
 
 def do_down():
     logger.info(f"{L}: do down")
