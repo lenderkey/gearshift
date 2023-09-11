@@ -28,11 +28,19 @@ import logging as logger
 security = HTTPBearer()
 
 async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(security)) -> Token:
+    """
+    If you set security.use_tokens to False, then this will always return the same token
+    and basically as long as you pass anything for "Authentication: Bearer" you'll be
+    authorized. Needless to say, this is for testing only.
+    """
     def execute_query():
         global server_connection
 
         if not server_connection:
             server_connection = sqlite3.connect(Context.instance.db_path)
+
+        if not Context.instance.get("security.use_tokens", default=True):
+            return Token(token_id="no-token", email="no-user", path="/")
 
         token_id = authorization.credentials
         try:
