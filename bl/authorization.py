@@ -34,7 +34,7 @@ def authorize(token_id:str, connection:sqlite3.Connection=None) -> Token:
     """
     import db
 
-    token = db.token_by_id(token_id, connection=connection)
+    token = db.token_by_token_id(token_id, connection=connection)
     if not token:
         raise TokenNotFound()
 

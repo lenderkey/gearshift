@@ -6,6 +6,7 @@ class Token:
     token_id: str
     path: str
     email: str
+    id: int = 0
     state: str = "A"
     data: str = "{}"
     added: datetime.datetime = None
@@ -41,3 +42,5 @@ class Token:
         d["added"] = self.added and helpers.format_datetime(self.added)
         d["seen"] = self.added and helpers.format_datetime(self.seen)
         d["expires"] = self.added and helpers.format_datetime(self.expires)
+
+        return d

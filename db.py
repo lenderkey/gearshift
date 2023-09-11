@@ -32,7 +32,8 @@ def setup() -> None:
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tokens (
-            token_id TEXT PRIMARY KEY, -- UUID
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            token_id TEXT UNIQUE, -- UUID
             path TEXT NOT NULL DEFAULT "/",
             state TEXT NOT NULL DEFAULT "A", -- "A": active, "D": deleted
             email TEXT NOT NULL, -- account which owns token
@@ -68,8 +69,9 @@ def token_put(token:Token):
     now = helpers.now()
 
     cursor.execute("""
-INSERT OR REPLACE INTO tokens (token_id, path, state, email, data, added, seen, expires)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+INSERT OR REPLACE INTO tokens (id, token_id, path, state, email, data, added, seen, expires)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (   
+        token.id,
         token.token_id,
         token.path,
         token.state,
@@ -83,12 +85,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
 
     return token
 
-def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
+def token_by_token_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
     """
     """
     cursor = connection and connection.cursor() or Context.instance.cursor()
 
-    query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens WHERE token_id=?"
+    query = "SELECT id, token_id, path, state, email, data, added, seen, expires FROM tokens WHERE token_id=?"
     params = [ token_id ]
 
     cursor.execute(query, params)
@@ -96,9 +98,10 @@ def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
     if not row:
         return
     
-    token_id, path, state, email, data, added, seen, expires = row
+    id, token_id, path, state, email, data, added, seen, expires = row
 
     return Token.make(
+        id=id,
         token_id=token_id,
         path=path,
         state=state,
@@ -110,15 +113,16 @@ def token_by_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
     )
 
 def token_list():
-    query = "SELECT token_id, path, state, email, data, added, seen, expires FROM tokens"
+    query = "SELECT id, token_id, path, state, email, data, added, seen, expires FROM tokens"
     params = []
 
     cursor = Context.instance.cursor()
 
     cursor.execute(query, params)
     while row := cursor.fetchone():
-        token_id, path, state, email, data, added, seen, expires = row
+        id, token_id, path, state, email, data, added, seen, expires = row
         yield Token.make(
+            id=id,
             token_id=token_id,
             path=path,
             state=state,
