@@ -1,5 +1,5 @@
 #
-#   db.py
+#   db/record.py
 #
 #   David Janes
 #   Gearshift
@@ -8,142 +8,12 @@
 #   Database operations
 #
 
-import time
-import sqlite3
 
 from Context import Context
-from structures import FileRecord, Token
+from structures import FileRecord
 import helpers
 
 import logging as logger
-
-def setup() -> None:
-    cursor = Context.instance.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS records (
-            filename TEXT PRIMARY KEY,
-            data_hash TEXT,
-            key_hash TEXT NOT NULL DEFAULT "",
-            size INTEGER,
-            is_synced INTEGER,
-            is_deleted INTEGER,
-            added TEXT NOT NULL,
-            seen TEXT NOT NULL
-        )''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS tokens (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            token_id TEXT UNIQUE, -- UUID
-            path TEXT NOT NULL DEFAULT "/",
-            state TEXT NOT NULL DEFAULT "A", -- "A": active, "D": deleted
-            email TEXT NOT NULL, -- account which owns token
-            data TEXT NOT NULL DEFAULT "{}", -- json data
-            added TEXT NOT NULL, -- isodatetime
-            seen TEXT NOT NULL, -- isodatetime
-            expires TEXT NOT NULL -- isodatetime
-    )''')
- 
-depth = 0
-
-def start() -> None:
-    """
-    Start a transaction
-    """
-    global depth
-
-    cursor = Context.instance.cursor()
-    if depth == 0:
-        cursor.execute("BEGIN TRANSACTION")
-        depth += 1
-
-def commit() -> None:
-    """
-    Commit a transaction
-    """
-    global depth
-
-    cursor = Context.instance.cursor()
-
-    depth -= 1
-    if depth == 0:
-        cursor.execute("COMMIT")
-        cursor.connection.commit()
-
-def token_put(token:Token):
-    """
-    XXX - need to be more clever with 'added'
-    """
-    L = "db.token_put"
-    
-    cursor = Context.instance.cursor()
-    now = helpers.now()
-
-    cursor.execute("""
-INSERT OR REPLACE INTO tokens (id, token_id, path, state, email, data, added, seen, expires)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (   
-        token.id,
-        token.token_id,
-        token.path,
-        token.state,
-        token.email,
-        token.data,
-        now,
-        now,
-        helpers.format_datetime(token.expires),
-    ))
-    logger.debug(f"{L}: inserted/updated {token.token_id=}")
-
-    return token
-
-def token_by_token_id(token_id:str, connection:sqlite3.Connection=None) -> Token:
-    """
-    """
-    cursor = connection and connection.cursor() or Context.instance.cursor()
-
-    query = "SELECT id, token_id, path, state, email, data, added, seen, expires FROM tokens WHERE token_id=?"
-    params = [ token_id ]
-
-    cursor.execute(query, params)
-    row = cursor.fetchone()
-    if not row:
-        return
-    
-    id, token_id, path, state, email, data, added, seen, expires = row
-
-    return Token.make(
-        id=id,
-        token_id=token_id,
-        path=path,
-        state=state,
-        email=email,
-        data=data,
-        added=added,
-        seen=seen,
-        expires=expires,
-    )
-
-def token_list():
-    query = "SELECT id, token_id, path, state, email, data, added, seen, expires FROM tokens"
-    params = []
-
-    cursor = Context.instance.cursor()
-
-    cursor.execute(query, params)
-    while row := cursor.fetchone():
-        id, token_id, path, state, email, data, added, seen, expires = row
-        yield Token.make(
-            id=id,
-            token_id=token_id,
-            path=path,
-            state=state,
-            email=email,
-            data=data,
-            added=added,
-            seen=seen,
-            expires=expires,
-        )
-
 
 def record_get(record:FileRecord) -> FileRecord:
     """
@@ -170,22 +40,8 @@ def record_get(record:FileRecord) -> FileRecord:
         is_deleted=bool(is_deleted),
     )
 
-def record_touch(record:FileRecord) -> bool:
-    L = "db.record_touch"
-    cursor = Context.instance.cursor()
-    now = helpers.now()
-
-    cursor.execute("""
-UPDATE records SET seen = ? WHERE filename = ?""", (
-        now,
-        record.filename,
-    ))                     
-    logger.debug(f"{L}: touched {record.filename=}")
-    return False
-
 def record_put(record:FileRecord) -> FileRecord:
     """
-    NEED TO MAKE THIS MULTIPLE CALLS BECAUSE OF added
     """
     L = "db.record_put"
 
@@ -193,7 +49,16 @@ def record_put(record:FileRecord) -> FileRecord:
     now = helpers.now()
 
     record = record.clone()
-    record.added = now
+
+    ## keep 'added'
+    query = "SELECT added FROM records WHERE filename=?"
+    cursor.execute(query, (record.filename, ))
+    row = cursor.fetchone()
+    if row:
+        record.added, = row
+    else:
+        record.added = now
+    
     record.cleanup()
 
     cursor.execute("""
@@ -211,6 +76,20 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
     logger.debug(f"{L}: inserted/updated {record.filename=}")
 
     return record
+
+def record_touch(record:FileRecord) -> bool:
+    L = "db.record_touch"
+    cursor = Context.instance.cursor()
+    now = helpers.now()
+
+    cursor.execute("""
+UPDATE records SET seen = ? WHERE filename = ?""", (
+        now,
+        record.filename,
+    ))                     
+    logger.debug(f"{L}: touched {record.filename=}")
+    return False
+
 
 def record_delete(record:FileRecord) -> FileRecord:
     """
@@ -264,11 +143,11 @@ def record_list(is_synced:bool=None, is_deleted:bool=None, since_seen:str=None, 
         params.append(key_hash)
 
     if since_seen is not None:
-        extras.append("seen >= ?")
+        extras.append("seen > ?")
         params.append(since_seen)
 
     if since_added is not None:
-        extras.append("added >= ?")
+        extras.append("added > ?")
         params.append(since_added)
 
     if extras:
