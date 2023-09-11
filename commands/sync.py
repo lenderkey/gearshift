@@ -20,15 +20,11 @@ from structures import SyncRequest
 
 L = "sync"
 
-import logging as logger
+import logging
+logger = logging.getLogger(__name__)
 
-@cli.command("sync", help="") # type: ignore
-def sync():
-    import bl
-
-    max_files = 10
-    max_size = 1000 * 1000 * 1000
-
+def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
+    logger.info(f"{L}: do up")
     started = time.time()
     db.setup()
     iterator = db.record_list(is_synced=False)
@@ -152,3 +148,21 @@ def sync():
 
 
     logger.info(f"{L}: finished {time.time() - started:.4f}s")
+
+def do_down():
+    logger.info(f"{L}: do down")
+    pass
+
+@cli.command("sync", help="") # type: ignore
+@click.option("--up/-no-up", is_flag=True, default=True, help="Upload files to remote")
+@click.option("--down/-no-down", is_flag=True, default=True, help="Download files from remote")
+def sync(up: bool, down: bool):
+    import bl
+
+    if up:
+        do_up()
+    if down:
+        do_down()
+
+
+
