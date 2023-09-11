@@ -62,7 +62,10 @@ async def download(
     connection = Connection.from_request(request)
 
     try:
-        return bl.pull_json(connection=connection, added=request.query_params.get("added"))
+        return bl.pull_json(connection=connection, 
+            since_added=request.query_params.get("added"),
+            limit=int(request.query_params.get("limit") or "0"),
+        )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
 

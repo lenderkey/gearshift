@@ -141,6 +141,7 @@ def record_list(
     key_hash:str=None, 
     order_by:str=None,
     order_dir:str="ASC",
+    limit:int=None,
 ):
     """
     Return a list of records
@@ -181,7 +182,9 @@ def record_list(
         if order_dir:
             query += " " + order_dir
 
-    print(query, params)
+    if limit:
+        query += f" LIMIT ?"
+        params.append(limit)
 
     # Execute the query and fetch the first record
     cursor.execute(query, params)
