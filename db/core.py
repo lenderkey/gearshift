@@ -19,13 +19,15 @@ def setup() -> None:
             filename TEXT PRIMARY KEY,
             data_hash TEXT,
             key_hash TEXT NOT NULL DEFAULT "",
+            aes_iv BLOB,
+            aes_tag BLOB,
             size INTEGER,
             is_synced INTEGER,
             is_deleted INTEGER,
             added TEXT NOT NULL,
             seen TEXT NOT NULL
         )''')
-    
+
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS tokens (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

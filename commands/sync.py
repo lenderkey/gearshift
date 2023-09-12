@@ -67,7 +67,7 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
             
         response = requests.post(
             Context.instance.src_url,
-            json=out_sync_items.model_dump(mode="json"),
+            json=out_sync_items.model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"]),
             headers={
                 **bl.authorization_header(),
             },

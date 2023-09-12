@@ -24,7 +24,7 @@ def record_get(record:FileRecord) -> FileRecord:
 
     query = """\
 SELECT 
-    filename, data_hash, key_hash, size, is_synced, is_deleted, added 
+    filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added 
 FROM records 
 WHERE filename=? AND data_hash=?"""
 
@@ -33,12 +33,14 @@ WHERE filename=? AND data_hash=?"""
     if not row:
         return
     
-    filename, data_hash, key_hash, size, is_synced, is_deleted, added = row
+    filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added = row
 
     return FileRecord.make(
         filename=filename,
         data_hash=data_hash,
         key_hash=key_hash,
+        aes_iv=aes_iv,
+        aes_tag=aes_tag,
         size=size,
         added=added,
         is_synced=bool(is_synced),
@@ -68,11 +70,13 @@ def record_put(record:FileRecord) -> FileRecord:
 
     cursor.execute("""
 INSERT OR REPLACE INTO records 
-(filename, data_hash, key_hash, size, is_synced, is_deleted, added, seen) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+(filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added, seen) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         not record.is_deleted and record.data_hash or "", 
         not record.is_deleted and record.key_hash or "", 
+        record.aes_iv,
+        record.aes_tag,
         not record.is_deleted and record.size or 0, 
         int(record.is_synced), 
         int(record.is_deleted),
@@ -119,11 +123,13 @@ def record_delete(record:FileRecord) -> FileRecord:
 
     cursor.execute("""
 INSERT OR REPLACE INTO records 
-(filename, data_hash, key_hash, size, is_synced, is_deleted, added, seen) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+(filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added, seen) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         "", 
         "", 
+        None,
+        None,
         0, 
         record.is_synced, 
         True,
@@ -148,7 +154,7 @@ def record_list(
     
     cursor = Context.instance.cursor()
 
-    query = "SELECT filename, data_hash, key_hash, size, is_synced, is_deleted, added FROM records"
+    query = "SELECT filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added FROM records"
     params = []
 
     extras = []
@@ -188,12 +194,14 @@ def record_list(
     # Execute the query and fetch the first record
     cursor.execute(query, params)
     while row := cursor.fetchone():
-        filename, data_hash, key_hash, size, is_synced, is_deleted, added = row
+        filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added = row
 
         yield FileRecord.make(
             filename=filename,
             data_hash=data_hash,
             key_hash=key_hash,
+            aes_iv=aes_iv,
+            aes_tag=aes_tag,
             size=size,
             is_synced=bool(is_synced),
             is_deleted=bool(is_deleted),

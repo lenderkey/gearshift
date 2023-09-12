@@ -8,6 +8,8 @@
 #   Database operations
 #
 
+from typing import Optional
+
 import os
 import dataclasses
 import datetime
@@ -20,6 +22,8 @@ class FileRecord:
     filename: str
     data_hash: str
     key_hash: str = ""
+    aes_iv: Optional[bytes] = None
+    aes_tag: Optional[bytes] = None
     size: int = 0
     is_synced: bool = False
     is_deleted: bool = False
@@ -58,8 +62,14 @@ class FileRecord:
 
         return Context.instance.dst_link_path(self.key_hash, self.data_hash)
     
-    def to_dict(self) -> dict:
-        return dataclasses.asdict(self)
+    def to_dict(self, exclude:list=None) -> dict:
+        d = dataclasses.asdict(self)
+
+        if exclude is not None:
+            for key in exclude:
+                d.pop(key, None)
+
+        return d
 
     def clone(self) -> "FileRecord":
         return FileRecord.make(**self.to_dict())

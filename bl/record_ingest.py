@@ -21,26 +21,44 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
     data_hash = helpers.sha256_data(data)
     assert data_hash == record.data_hash
 
-    write_data = data
+    # if record.key_hash:
+    # def encrypt(self, keyhash:str, data:bytes) -> bytes:
+    #     from cryptography.fernet import Fernet
 
-    if record.key_hash:
-        from cryptography.fernet import Fernet
-        cipher_suite = Fernet(Context.instance.server_key(record.key_hash))
-        write_data = cipher_suite.encrypt(data)
+    #     if not keyhash:
+    #         return data
+
+    #     cipher_suite = Fernet(self.server_key(key_hash))
+    #     data = cipher_suite.encrypt(data)
+    #     data = base64.urlsafe_b64encode(data)
+
+    #     return data
+    
 
     with lock:
         ## make the link file
         linkpath = record.linkpath
         
         if not os.path.exists(linkpath):
-            logger.info(f"{L}: {linkpath=} already exists - no need to write")
+            logger.info(f"{L}: create {linkpath=}")
         
             os.makedirs(os.path.dirname(linkpath), exist_ok=True)
+
+            if record.key_hash:
+                key = Context.instance.server_key(record.key_hash)  
+                key = helpers.aes_key(key)     
+                aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
+            else:
+                aes_iv, aes_tag, aes_ciphertext = None, None, data
+
+            record = record.clone()
+            record.aes_iv = aes_iv
+            record.aes_tag = aes_tag
 
             try:
                 link_filename_tmp = linkpath + ".tmp"
                 with open(link_filename_tmp, "wb") as fout:
-                    fout.write(write_data)
+                    fout.write(aes_ciphertext)
             except IOError as x:
                 logger.error(f"{L}: {x} writing {link_filename_tmp=}")
 
@@ -61,4 +79,6 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
         except FileNotFoundError: pass
 
         os.link(linkpath, dst_filename)
+
+    return record
 

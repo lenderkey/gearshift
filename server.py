@@ -87,7 +87,8 @@ async def upload_bytes_or_json(
     match content_type:
         case "application/json":
             try:
-                return bl.pushed_json(await request.json(), token=token, connection=connection)
+                return bl.pushed_json(await request.json(), token=token, connection=connection)\
+                    .model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"])
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")

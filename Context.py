@@ -12,6 +12,7 @@ import yaml
 import os
 import sys
 import sqlite3
+import base64
 
 import logging as logger
 
@@ -185,11 +186,13 @@ class Context:
         with open(keys_filename, "rb") as fin:
             for key in fin.read().split(b"\n"):
                 this_hash = helpers.sha256_data(key)
-                if this_hash == keys_hash:
-                    return key
+                if this_hash != keys_hash:
+                    continue
+
+                return key
                 
         raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
-    
+
 if __name__ == '__main__':
     context = Context()
     ## print(context.db)

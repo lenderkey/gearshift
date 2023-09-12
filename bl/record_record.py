@@ -22,12 +22,15 @@ def record_record(record:FileRecord, token:Token, connection:Connection, action:
             tokend = token.to_dict()
             del tokend["token_id"] ## not for you Jen
 
-            str = json.dumps({
+            d = {
                 "action": action,
-                "record": record.to_dict(),
+                "record": record.to_dict(exclude=["aes_iv", "aes_tag"]),
                 "token": tokend,
                 "connection": connection.to_dict(),
-            }, default=helpers.default_serializer)
+            }
+            import pprint
+            pprint.pprint(d)
+            str = json.dumps(d, default=helpers.default_serializer)
             fout.write(str)
             fout.write("\n")
 

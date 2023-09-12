@@ -11,6 +11,7 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
     """
     SERVER side when the CLIENT sends a SyncRequest
     """
+    print("HERE:XXX", raw_json)
     out_sync_items = SyncRequest()
     in_sync_items = SyncRequest(**raw_json)
 
