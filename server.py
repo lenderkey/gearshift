@@ -76,6 +76,7 @@ async def upload_bytes_or_json(
     request: Request,
     content_type: str = Header(None),
     token: Token = Depends(get_authorized),
+    action: str = "default",
 ):
     import db
 
@@ -84,8 +85,8 @@ async def upload_bytes_or_json(
     connection = Connection.from_request(request)
 
     db.setup()
-    match content_type:
-        case "application/json":
+    match content_type, action:
+        case "application/json", "default":
             try:
                 return bl.pushed_json(await request.json(), token=token, connection=connection)\
                     .model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"])
@@ -93,7 +94,15 @@ async def upload_bytes_or_json(
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
-        case "application/zip":
+        case "application/json", "get-zip":
+            try:
+                return bl.pushed_json(await request.json(), token=token, connection=connection)\
+                    .model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"])
+            except Exception as e:
+                logger.exception(f"unexpected error")
+                raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
+            
+        case "application/zip", _:
             try:
                 return bl.pushed_zip(await request.body(), token=token, connection=connection)
             except Exception as e:
