@@ -24,6 +24,19 @@ def token_put(token:Token):
     cursor = Context.instance.cursor()
     now = helpers.now()
 
+    token = token.clone()
+
+    ## keep 'added'
+    query = "SELECT added FROM tokens WHERE id=?"
+    cursor.execute(query, (token.id, ))
+    row = cursor.fetchone()
+    if row:
+        token.added, = row
+    else:
+        token.added = now
+    
+    token.cleanup()
+
     cursor.execute("""
 INSERT OR REPLACE INTO tokens (id, token_id, path, state, email, data, added, seen, expires)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (   
@@ -33,8 +46,8 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
         token.state,
         token.email,
         token.data,
-        now,
-        now,
+        helpers.format_datetime(token.added),
+        helpers.format_datetime(now),
         helpers.format_datetime(token.expires),
     ))
     logger.debug(f"{L}: inserted/updated {token.token_id=}")

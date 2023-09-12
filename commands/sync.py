@@ -50,8 +50,6 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
             outd[out_record.filename] = out_record
             nrecords += 1
 
-            print("OUT", out_record)
-
             count += 1
             size += out_record.size
 
