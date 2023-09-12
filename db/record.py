@@ -68,7 +68,7 @@ def record_put(record:FileRecord) -> FileRecord:
 
     cursor.execute("""
 INSERT OR REPLACE INTO records 
-(filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+(filename, data_hash, key_hash, size, is_synced, is_deleted, added, seen) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         not record.is_deleted and record.data_hash or "", 
@@ -119,7 +119,7 @@ def record_delete(record:FileRecord) -> FileRecord:
 
     cursor.execute("""
 INSERT OR REPLACE INTO records 
-(filename, data_hash, key_hash, size, is_synced, is_deleted, seen, added) 
+(filename, data_hash, key_hash, size, is_synced, is_deleted, added, seen) 
 VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
         record.filename, 
         "", 
