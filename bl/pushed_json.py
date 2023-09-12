@@ -15,18 +15,21 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
     in_sync_items = SyncRequest(**raw_json)
 
     for in_record in in_sync_items.records:
-        db.start()
+        try:
+            db.start()
 
-        if in_record.is_deleted:
-            bl.record_delete(in_record, token=token, connection=connection)
-        elif current_record := db.record_get(in_record):
-            db.record_touch(in_record)
-        else:
-            in_record.is_synced = False
-            out_sync_items.records.append(in_record)
-            continue
+            if in_record.is_deleted:
+                bl.record_delete(in_record, token=token, connection=connection)
+            elif current_record := db.record_get(in_record):
+                db.record_touch(in_record)
+            else:
+                in_record.is_synced = False
+                out_sync_items.records.append(in_record)
 
-        db.commit()
+            db.commit()
+        except:
+            db.rollback()
+            raise
 
         '''
         Right here we can add a big efficiency by looking for a

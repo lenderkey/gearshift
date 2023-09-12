@@ -10,6 +10,8 @@
 
 from Context import Context
 
+import logging as logger
+
 def setup() -> None:
     cursor = Context.instance.cursor()
     cursor.execute('''
@@ -59,6 +61,18 @@ def commit() -> None:
     cursor = Context.instance.cursor()
 
     depth -= 1
-    if depth == 0:
+    if depth < 0:
+        logger.error("db.commit: depth < 0")
+        depth = 0
+    elif depth == 0:
         cursor.execute("COMMIT")
         cursor.connection.commit()
+
+def rollback() -> None:
+    """
+    Rollback a transaction
+    """
+    global depth
+
+    cursor = Context.instance.cursor()
+    cursor.connection.rollback()
