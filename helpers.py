@@ -159,6 +159,7 @@ def default_serializer(o):
     raise TypeError("Object of type datetime is not JSON serializable")
 
 def aes_key(key:bytes) -> bytes:
+    return key
     ## XXX - cache me?
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     from cryptography.hazmat.primitives import hashes

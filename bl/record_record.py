@@ -28,8 +28,8 @@ def record_record(record:FileRecord, token:Token, connection:Connection, action:
                 "token": tokend,
                 "connection": connection.to_dict(),
             }
-            import pprint
-            pprint.pprint(d)
+            # import pprint
+            # pprint.pprint(d)
             str = json.dumps(d, default=helpers.default_serializer)
             fout.write(str)
             fout.write("\n")

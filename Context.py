@@ -189,7 +189,7 @@ class Context:
                 if this_hash != keys_hash:
                     continue
 
-                return key
+                return base64.urlsafe_b64decode(key)
                 
         raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
 
