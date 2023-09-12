@@ -157,11 +157,66 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
 
 def do_down():
     logger.info(f"{L}: do down")
-    pass
+
+    since_added = ""
+    while True:
+        ## get the next batch of files to sync
+        response = requests.get(
+            Context.instance.src_url,
+            params={
+                "limit": 5,
+                "added": since_added,
+            },
+            headers={
+                **bl.authorization_header(),
+            },
+        )
+        if response.status_code != 200:
+            logger.error(f"{L}: unexpected status_code={response.status_code}")
+            break
+
+        in_json = response.json()
+        pprint.pprint(in_json)
+
+        in_sync_items = SyncRequest(**in_json)
+        if not in_sync_items.records:
+            break
+
+        ## figure out which files we want
+        for item in in_sync_items.records:
+            if record := db.record_get(item):
+                if record.data_hash == item.data_hash:
+                    print("GOT", record)
+                    continue
+
+                print("NEED", record)
+                break
+
+        ## request those files
+
+        ## figure out the next batch of files to sync
+        max_added = ""
+        for item in in_sync_items.records:
+            item_added = helpers.format_datetime(item.added)
+            if item_added < since_added:
+                logger.error("unexpected: {item.added=} < {since_added=}")
+                break
+
+            max_added = max(max_added, item_added)
+
+        if max_added <= since_added:
+            logger.error("unexpected: {max_added=} <= {since_added=}")
+            break
+
+        since_added = max_added
+
+        ## nothing left to do
+        if not in_sync_items.more:
+            break
 
 @cli.command("sync", help="") # type: ignore
-@click.option("--up/-no-up", is_flag=True, default=True, help="Upload files to remote")
-@click.option("--down/-no-down", is_flag=True, default=True, help="Download files from remote")
+@click.option("--up/--no-up", is_flag=True, default=True, help="Upload files to remote")
+@click.option("--down/--no-down", is_flag=True, default=True, help="Download files from remote")
 def sync(up: bool, down: bool):
     import bl
 

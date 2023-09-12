@@ -21,12 +21,12 @@ import logging as logger
 class FileRecord:
     filename: str
     data_hash: str
-    key_hash: str = ""
+    key_hash: Optional[str] = ""
     aes_iv: Optional[bytes] = None
     aes_tag: Optional[bytes] = None
     size: int = 0
-    is_synced: bool = False
-    is_deleted: bool = False
+    is_synced: Optional[bool] = False
+    is_deleted: Optional[bool] = False
     added: datetime.datetime = None
 
     @classmethod
