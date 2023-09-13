@@ -159,6 +159,7 @@ def default_serializer(o):
     raise TypeError("Object of type datetime is not JSON serializable")
 
 def aes_key(key:bytes) -> bytes:
+    return base64.urlsafe_b64decode(key)
     return key
     ## XXX - cache me?
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -177,7 +178,7 @@ def aes_key(key:bytes) -> bytes:
     print("HERE:XXX", key, len(key))    
     return key
 
-def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
+def aes_encrypt(key:bytes, data:bytes, iv:bytes) -> Tuple[bytes, bytes, bytes]:
     iv = os.urandom(12)
     encryptor = ciphers.Cipher(
         ciphers.algorithms.AES(key),
@@ -187,10 +188,18 @@ def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
     ciphertext = encryptor.update(data) + encryptor.finalize()
     return (iv, encryptor.tag, ciphertext)
 
-def aes_decrypt(key:bytes, iv:bytes, tag:bytes, ciphertext:bytes):
+def aes_decrypt(key:bytes, iv:bytes, tag:bytes, ciphertext:bytes) -> bytes:
     decryptor = ciphers.Cipher(
         ciphers.algorithms.AES(key),
         ciphers.modes.GCM(iv, tag),
         backend=default_backend()
     ).decryptor()
     return decryptor.update(ciphertext) + decryptor.finalize()
+
+if __name__ == '__main__':
+    import pprint
+    value = os.urandom(12)
+    value = base64.urlsafe_b64encode(value)
+    value = value.decode("ascii")
+    base64.urlsafe_b64decode(value)
+    pprint.pprint(value)

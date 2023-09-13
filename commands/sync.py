@@ -16,6 +16,7 @@ import pprint
 import time
 import requests
 import db
+import click
 from structures import SyncRequest
 
 L = "sync"
@@ -156,6 +157,7 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
     logger.info(f"{L}: finished {time.time() - started:.4f}s {ncycles=} {nrecords=}")
 
 def do_down():
+    import helpers
     logger.info(f"{L}: do down")
 
     since_added = ""

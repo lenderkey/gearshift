@@ -115,3 +115,44 @@ async def upload_bytes_or_json(
                 status_code=400,
                 detail=f"Unsupported Content-Type header: {content_type}",
             )
+
+@app.post("/{path}", tags=["secure"])
+async def post_file(
+    request: Request,
+    path: str,
+    content_type: str = Header(None),
+    token: Token = Depends(get_authorized),
+):
+    return "Hello!"
+
+@app.get("/{path:path}", tags=["secure"])
+async def get_file(
+    request: Request,
+    path: str,
+    token: Token = Depends(get_authorized),
+):
+    from structures import FileRecord
+    record = FileRecord(filename=path, data_hash="")
+    record = db.record_get(record, mode="filename")
+    if not record:
+        raise HTTPException(status_code=400, detail=f"File not found")
+    if record.is_deleted:
+        raise HTTPException(status_code=400, detail=f"File deleted")
+
+    from fastapi.responses import StreamingResponse
+    from io import BytesIO
+    import mimetypes
+    import helpers
+
+    with open(record.linkpath, "rb") as fin:
+        data = fin.read()
+        key = Context.instance.server_key(record.key_hash)     
+        print("KEY", key, type(key), record.key_hash)
+        print(type(record.aes_iv), type(record.aes_tag), type(data))
+        data = helpers.aes_decrypt(key, iv=record.aes_iv, tag=record.aes_tag, ciphertext=data)
+        ## print("DATA", data)
+    
+    return StreamingResponse(BytesIO(data), media_type=mimetypes.guess_type(record.filename)[0])
+    
+    print(record)
+    return f"Hello! {path=}"

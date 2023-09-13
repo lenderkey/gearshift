@@ -8,6 +8,7 @@
 #   Database operations
 #
 
+from typing import TypeAlias, Literal
 
 from Context import Context
 from structures import FileRecord
@@ -15,7 +16,9 @@ import helpers
 
 import logging as logger
 
-def record_get(record:FileRecord) -> FileRecord:
+GetMode: TypeAlias = Literal["filename,data_hash", "filename", "data_hash" ]
+
+def record_get(record:FileRecord, mode:GetMode="filename,data_hash") -> FileRecord:
     """
     Retrieve a record where the filename and data_hash match.
     """
@@ -26,9 +29,27 @@ def record_get(record:FileRecord) -> FileRecord:
 SELECT 
     filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added 
 FROM records 
-WHERE filename=? AND data_hash=?"""
+"""
+    params = []
 
-    cursor.execute(query, (record.filename, record.data_hash))
+    match mode:
+        case "filename,data_hash":
+            query += "WHERE filename=? AND data_hash=?"
+            params = [ record.filename, record.data_hash ]
+
+        case "filename":
+            query += "WHERE filename=?"
+            params = [ record.filename ]
+
+        case "data_hash":
+            query += "WHERE data_hash=?"
+            params = [ record.data_hash ]
+
+        case _:
+            raise ValueError(f"unknown mode: {mode}")
+
+    cursor.execute(query, params)
+
     row = cursor.fetchone()
     if not row:
         return

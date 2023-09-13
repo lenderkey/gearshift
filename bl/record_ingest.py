@@ -39,15 +39,18 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
         ## make the link file
         linkpath = record.linkpath
         
+        print("HERE:BBB.1")
         if not os.path.exists(linkpath):
             logger.info(f"{L}: create {linkpath=}")
         
             os.makedirs(os.path.dirname(linkpath), exist_ok=True)
 
+            print("HERE:BBB")
             if record.key_hash:
                 key = Context.instance.server_key(record.key_hash)  
                 key = helpers.aes_key(key)     
                 aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
+                print("HERE:CCC", aes_iv)
             else:
                 aes_iv, aes_tag, aes_ciphertext = None, None, data
 
