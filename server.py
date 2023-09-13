@@ -142,17 +142,20 @@ async def get_file(
     from fastapi.responses import StreamingResponse
     from io import BytesIO
     import mimetypes
-    import helpers
 
-    with open(record.linkpath, "rb") as fin:
-        data = fin.read()
-        key = Context.instance.server_key(record.key_hash)     
-        print("KEY", key, type(key), record.key_hash)
-        print(type(record.aes_iv), type(record.aes_tag), type(data))
-        data = helpers.aes_decrypt(key, iv=record.aes_iv, tag=record.aes_tag, ciphertext=data)
-        ## print("DATA", data)
+    # with open(record.linkpath, "rb") as fin:
+    #     aes_iv_len = int(fin.read(1)[0])
+    #     aes_iv = fin.read(aes_iv_len)
+    #     aes_tag_len = int(fin.read(1)[0])
+    #     aes_tag = fin.read(aes_tag_len)
+    #     data = fin.read()
+    #     key = Context.instance.server_key(record.key_hash)     
+    #     data = helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
     
-    return StreamingResponse(BytesIO(data), media_type=mimetypes.guess_type(record.filename)[0])
+    return StreamingResponse(
+        BytesIO(bl.record_digest(record)), 
+        media_type=mimetypes.guess_type(record.filename)[0],
+    )
     
     print(record)
     return f"Hello! {path=}"

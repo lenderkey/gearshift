@@ -1,4 +1,5 @@
 from .record_ingest import record_ingest
+from .record_digest import record_digest
 from .file_analyze import file_analyze
 from .data_analyze import data_analyze
 from .pushed_zip import pushed_zip

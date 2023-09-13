@@ -21,46 +21,35 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
     data_hash = helpers.sha256_data(data)
     assert data_hash == record.data_hash
 
-    # if record.key_hash:
-    # def encrypt(self, keyhash:str, data:bytes) -> bytes:
-    #     from cryptography.fernet import Fernet
-
-    #     if not keyhash:
-    #         return data
-
-    #     cipher_suite = Fernet(self.server_key(key_hash))
-    #     data = cipher_suite.encrypt(data)
-    #     data = base64.urlsafe_b64encode(data)
-
-    #     return data
-    
-
     with lock:
         ## make the link file
         linkpath = record.linkpath
         
-        print("HERE:BBB.1")
         if not os.path.exists(linkpath):
             logger.info(f"{L}: create {linkpath=}")
         
             os.makedirs(os.path.dirname(linkpath), exist_ok=True)
 
-            print("HERE:BBB")
             if record.key_hash:
                 key = Context.instance.server_key(record.key_hash)  
-                key = helpers.aes_key(key)     
                 aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
-                print("HERE:CCC", aes_iv)
             else:
                 aes_iv, aes_tag, aes_ciphertext = None, None, data
 
             record = record.clone()
-            record.aes_iv = aes_iv
-            record.aes_tag = aes_tag
 
             try:
                 link_filename_tmp = linkpath + ".tmp"
                 with open(link_filename_tmp, "wb") as fout:
+                    if not record.key_hash:
+                        fout.write(bytes([ 0, 0 ]))
+                        fout.write(aes_ciphertext)
+                    else:
+                        fout.write(bytes([ len(aes_iv) ]))
+                        fout.write(aes_iv)
+                        fout.write(bytes([ len(aes_tag) ]))
+                        fout.write(aes_tag)
+
                     fout.write(aes_ciphertext)
             except IOError as x:
                 logger.error(f"{L}: {x} writing {link_filename_tmp=}")

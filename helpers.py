@@ -178,7 +178,7 @@ def aes_key(key:bytes) -> bytes:
     print("HERE:XXX", key, len(key))    
     return key
 
-def aes_encrypt(key:bytes, data:bytes, iv:bytes) -> Tuple[bytes, bytes, bytes]:
+def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
     iv = os.urandom(12)
     encryptor = ciphers.Cipher(
         ciphers.algorithms.AES(key),
