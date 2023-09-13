@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Request, Header, HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import StreamingResponse
 
 import os
+import io
+import mimetypes
 import asyncio
 import sqlite3
 
@@ -116,14 +119,26 @@ async def upload_bytes_or_json(
                 detail=f"Unsupported Content-Type header: {content_type}",
             )
 
-@app.post("/{path}", tags=["secure"])
+@app.post("/{path:path}", tags=["secure"])
 async def post_file(
     request: Request,
     path: str,
     content_type: str = Header(None),
     token: Token = Depends(get_authorized),
 ):
-    return "Hello!"
+    ## read the data
+    data = await request.body()
+    connection = Connection.from_request(request)
+    
+    record = bl.data_analyze(path, data=data)
+
+    bl.record_put(record, data=data, token=token, connection=connection)
+
+    return {
+        "message": "Received Bytes",
+        "length": len(data),
+        "name": path,
+    }
 
 @app.get("/{path:path}", tags=["secure"])
 async def get_file(
@@ -139,23 +154,7 @@ async def get_file(
     if record.is_deleted:
         raise HTTPException(status_code=400, detail=f"File deleted")
 
-    from fastapi.responses import StreamingResponse
-    from io import BytesIO
-    import mimetypes
-
-    # with open(record.linkpath, "rb") as fin:
-    #     aes_iv_len = int(fin.read(1)[0])
-    #     aes_iv = fin.read(aes_iv_len)
-    #     aes_tag_len = int(fin.read(1)[0])
-    #     aes_tag = fin.read(aes_tag_len)
-    #     data = fin.read()
-    #     key = Context.instance.server_key(record.key_hash)     
-    #     data = helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
-    
     return StreamingResponse(
-        BytesIO(bl.record_digest(record)), 
+        io.BytesIO(bl.record_digest(record)), 
         media_type=mimetypes.guess_type(record.filename)[0],
     )
-    
-    print(record)
-    return f"Hello! {path=}"
