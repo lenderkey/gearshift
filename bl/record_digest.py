@@ -7,6 +7,11 @@ def record_digest(record:FileRecord) -> bytes:
     Return the data for a record. Don't think about the naming too much.
     """
     with open(record.linkpath, "rb") as fin:
+        if not record.key_hash:
+            return fin.read()
+
+        header = fin.read(4)
+        assert header == b"AES0"
         aes_iv_len = int(fin.read(1)[0])
         aes_iv = fin.read(aes_iv_len)
         aes_tag_len = int(fin.read(1)[0])

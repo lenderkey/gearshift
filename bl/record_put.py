@@ -20,7 +20,6 @@ def record_put(record:FileRecord, data:bytes, token:Token, connection:Connection
 
     db.start()
     record = bl.record_ingest(record, data=data)
-    print("HERE:AAA", record.aes_iv)
     record = db.record_put(record)
     bl.record_record(record, token=token, connection=connection, action="put")
     db.commit()

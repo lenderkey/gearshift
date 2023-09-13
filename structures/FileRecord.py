@@ -22,8 +22,8 @@ class FileRecord:
     filename: str
     data_hash: str
     key_hash: Optional[str] = ""
-    aes_iv: Optional[bytes] = None
-    aes_tag: Optional[bytes] = None
+    aes_iv: Optional[bytes] = None ## to be deleted
+    aes_tag: Optional[bytes] = None ## to be deleted
     size: int = 0
     is_synced: Optional[bool] = False
     is_deleted: Optional[bool] = False

@@ -42,9 +42,9 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
                 link_filename_tmp = linkpath + ".tmp"
                 with open(link_filename_tmp, "wb") as fout:
                     if not record.key_hash:
-                        fout.write(bytes([ 0, 0 ]))
                         fout.write(aes_ciphertext)
                     else:
+                        fout.write(b"AES0")
                         fout.write(bytes([ len(aes_iv) ]))
                         fout.write(aes_iv)
                         fout.write(bytes([ len(aes_tag) ]))
