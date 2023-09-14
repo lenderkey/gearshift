@@ -7,10 +7,13 @@ from structures import SyncRequest, Token, Connection
 import bl
 import db
 
-def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
+def pull_zip(raw_json:dict, token:Token, connection:Connection) -> bytes:
     """
-    SERVER side when the CLIENT sends a SyncRequest
+    SERVER side when the CLIENT sends a SyncRequest for ZIP file
     """
+    print("PULL ZIP")
+    return b""
+
     # print("HERE:XXX", raw_json)
     out_sync_items = SyncRequest()
     in_sync_items = SyncRequest(**raw_json)

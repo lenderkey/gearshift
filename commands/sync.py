@@ -25,6 +25,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
+    import bl
+
     logger.info(f"{L}: do up")
 
     started = time.time()
@@ -158,6 +160,8 @@ def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
 
 def do_down():
     import helpers
+    import bl
+
     logger.info(f"{L}: do down")
 
     since_added = ""
@@ -178,23 +182,41 @@ def do_down():
             break
 
         in_json = response.json()
-        pprint.pprint(in_json)
+        ## pprint.pprint(in_json)
 
         in_sync_items = SyncRequest(**in_json)
         if not in_sync_items.records:
             break
 
         ## figure out which files we want
+        down_sync_items = SyncRequest()
+
         for item in in_sync_items.records:
             if record := db.record_get(item):
-                if record.data_hash == item.data_hash:
-                    print("GOT", record)
+                if False and record.data_hash == item.data_hash:
+                    print("HAVE", record)
                     continue
 
                 print("NEED", record)
+                down_sync_items.records.append(record)
                 break
 
         ## request those files
+        if down_sync_items.records:
+            print(down_sync_items)
+            response = requests.post(
+                Context.instance.src_url,
+                params={
+                    "action": "pull-zip",
+                },
+                json=down_sync_items.model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"]),
+                headers={
+                    **bl.authorization_header(),
+                },
+            )
+            if response.status_code != 200:
+                logger.error(f"{L}: unexpected status_code={response.status_code}")
+                break
 
         ## figure out the next batch of files to sync
         max_added = ""
@@ -220,8 +242,6 @@ def do_down():
 @click.option("--up/--no-up", is_flag=True, default=True, help="Upload files to remote")
 @click.option("--down/--no-down", is_flag=True, default=True, help="Download files from remote")
 def sync(up: bool, down: bool):
-    import bl
-
     if up:
         do_up()
     if down:

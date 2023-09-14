@@ -97,10 +97,13 @@ async def upload_bytes_or_json(
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
             
-        case "application/json", "get-zip":
+        case "application/json", "pull-zip":
             try:
-                return bl.pushed_json(await request.json(), token=token, connection=connection)\
-                    .model_dump(mode="json", exclude=["aes_iv", "aes_tag", "key_hash", "seen"])
+                data = bl.pull_zip(await request.json(), token=token, connection=connection)
+                return StreamingResponse(
+                    io.BytesIO(data),
+                    media_type="application/zip",
+                )
             except Exception as e:
                 logger.exception(f"unexpected error")
                 raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")
