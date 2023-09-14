@@ -16,7 +16,7 @@ def pull_zip(raw_json:bytes, token:Token, connection:Connection) -> bytes:
     """
     SERVER side when the CLIENT sends a SyncRequest for ZIP file
     """
-    print("PULL ZIP", len(raw_json))
+    ## print("PULL ZIP", len(raw_json))
 
     pull_sync_items = SyncRequest(**raw_json)
 

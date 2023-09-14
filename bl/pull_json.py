@@ -26,7 +26,7 @@ def pull_json(
 
         count += 1
         nbytes += item.size
-        print("HERE:COUNT", count, nbytes, max_size)
+        ## print("HERE:COUNT", count, nbytes, max_size)
 
         if nbytes >= max_size:
             out_sync_items.more = True
@@ -36,5 +36,5 @@ def pull_json(
             out_sync_items.more = True
             break
 
-    print("HERE:NITEM", len(out_sync_items.records))
+    ## print("HERE:NITEM", len(out_sync_items.records))
     return out_sync_items

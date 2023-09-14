@@ -158,26 +158,6 @@ def default_serializer(o):
     
     raise TypeError("Object of type datetime is not JSON serializable")
 
-def aes_key(key:bytes) -> bytes:
-    return base64.urlsafe_b64decode(key)
-    return key
-    ## XXX - cache me?
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.primitives import hashes
-
-    salt = b'm\xd5J\x9c\r\x88\xbf|\xeeN\xb1)\x87\xe82\t'
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000,
-        backend=default_backend()
-    )
-    key = key[:32]
-
-    print("HERE:XXX", key, len(key))    
-    return key
-
 def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
     iv = os.urandom(12)
     encryptor = ciphers.Cipher(

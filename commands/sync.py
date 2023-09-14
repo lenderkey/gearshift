@@ -208,7 +208,7 @@ def do_down():
                 
         ## request those files
         if down_sync_items.records:
-            print(down_sync_items)
+            ## print(down_sync_items)
             response = requests.post(
                 Context.instance.src_url,
                 params={
@@ -224,7 +224,7 @@ def do_down():
                 break
 
             data = response.content
-            print("HERE:XXX", len(data))
+            ## print("HERE:XXX", len(data))
             zipper = zipfile.ZipFile(io.BytesIO(data), mode="r")
             for dst_name in zipper.namelist():
                 data = zipper.read(dst_name)
