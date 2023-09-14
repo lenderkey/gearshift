@@ -151,7 +151,7 @@ async def get_file(
 ):
     from structures import FileRecord
     record = FileRecord(filename=path, data_hash="")
-    record = db.record_get(record, mode="filename")
+    record = db.record_get(record, fields="filename")
     if not record:
         raise HTTPException(status_code=400, detail=f"File not found")
     if record.is_deleted:

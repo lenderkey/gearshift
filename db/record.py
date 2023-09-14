@@ -8,7 +8,7 @@
 #   Database operations
 #
 
-from typing import TypeAlias, Literal
+from typing import List
 
 from Context import Context
 from structures import FileRecord
@@ -16,9 +16,7 @@ import helpers
 
 import logging as logger
 
-GetMode: TypeAlias = Literal["filename,data_hash", "filename", "data_hash" ]
-
-def record_get(record:FileRecord, mode:GetMode="filename,data_hash") -> FileRecord:
+def record_get(record:FileRecord, fields:str|List[str]="filename,data_hash") -> FileRecord:
     """
     Retrieve a record where the filename and data_hash match.
     """
@@ -32,21 +30,18 @@ FROM records
 """
     params = []
 
-    match mode:
-        case "filename,data_hash":
-            query += "WHERE filename=? AND data_hash=?"
-            params = [ record.filename, record.data_hash ]
+    if isinstance(fields, str):
+        fields = fields.split(",")
 
-        case "filename":
-            query += "WHERE filename=?"
-            params = [ record.filename ]
+    if fields:
+        query += "WHERE "
 
-        case "data_hash":
-            query += "WHERE data_hash=?"
-            params = [ record.data_hash ]
+        for fx, field in enumerate(fields):
+            if fx:
+                query += " AND "
 
-        case _:
-            raise ValueError(f"unknown mode: {mode}")
+            query += f"{field}=?"
+            params.append(getattr(record, field))
 
     cursor.execute(query, params)
 
@@ -229,18 +224,22 @@ def record_list(
             added=added,
         )
 
-def mark_deleted(cutoff:float, force:bool=False):
+def mark_deleted(cutoff:str, force:bool=False):
     """
     Mark a document as deleted if it has not been seen since_seen the cutoff time.
     """
+
+    now = helpers.now()
 
     cursor = Context.instance.cursor()
     try:            
         if force:
             cursor.execute('''
-                UPDATE records SET is_deleted = ?, size = 0 WHERE seen < ? AND is_deleted = ?
-            ''', (True, cutoff, False)) 
-
+                UPDATE records SET is_deleted = ?, size = 0, added=?, data_hash='' WHERE seen < ? AND is_deleted = ?
+            ''', (
+                True, helpers.format_datetime(now), 
+                cutoff,  0,
+            )) 
             return cursor.rowcount
         else:
             cursor.execute('''
@@ -248,6 +247,7 @@ def mark_deleted(cutoff:float, force:bool=False):
             ''', (cutoff, False))
 
             row = cursor.fetchone()
+            print("B", row[0])
             return row[0]
     finally:        
         cursor.close()

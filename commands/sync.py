@@ -18,6 +18,7 @@ import requests
 import db
 import click
 import random
+import re
 from structures import SyncRequest
 
 L = "sync"
@@ -193,8 +194,26 @@ def do_down():
 
         for item in in_sync_items.records:
             if record := db.record_get(item):
+                if re.match("^...[.]txt$", record.filename):
+                    print(record.filename)
+                    print(record.data_hash, item.data_hash)
+                    print(record.is_deleted, item.is_deleted, record.is_deleted == item.is_deleted)
+                    print()
+
                 if record.data_hash == item.data_hash:
                     logger.debug(f"{L}: already have {item}")
+                    continue
+
+                if item.is_deleted:
+                    logger.info(f"{L}: DELETED {item}")
+                    
+                    db.record_delete(item)
+
+                    try:
+                        os.unlink(item.filepath)
+                    except FileNotFoundError:
+                        pass
+
                     continue
 
                 logger.debug(f"{L}: UDPATE {item}")

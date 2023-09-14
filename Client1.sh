@@ -1,0 +1,3 @@
+./gearshift sweep &&
+./gearshift sync 
+
