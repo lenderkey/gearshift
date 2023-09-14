@@ -235,7 +235,7 @@ def mark_deleted(cutoff:str, force:bool=False):
     try:            
         if force:
             cursor.execute('''
-                UPDATE records SET is_deleted = ?, size = 0, added=?, data_hash='' WHERE seen < ? AND is_deleted = ?
+                UPDATE records SET is_deleted = ?, is_synced = 0, size = 0, added=?, data_hash='' WHERE seen < ? AND is_deleted = ?
             ''', (
                 True, helpers.format_datetime(now), 
                 cutoff,  0,

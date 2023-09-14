@@ -20,6 +20,7 @@ def pushed_json(raw_json:dict, token:Token, connection:Connection) -> dict:
             db.start()
 
             if in_record.is_deleted:
+                print("REDORD DELETE", in_record.filename)
                 bl.record_delete(in_record, token=token, connection=connection)
             elif current_record := db.record_get(in_record):
                 db.record_touch(in_record)
