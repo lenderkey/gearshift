@@ -193,20 +193,11 @@ def do_down():
         down_sync_items = SyncRequest()
 
         for item in in_sync_items.records:
-            if record := db.record_get(item):
-                if re.match("^...[.]txt$", record.filename):
-                    print(record.filename)
-                    print(record.data_hash, item.data_hash)
-                    print(record.is_deleted, item.is_deleted, record.is_deleted == item.is_deleted)
-                    print()
+            record = db.record_get(item)
 
-                if record.data_hash == item.data_hash:
-                    logger.debug(f"{L}: already have {item}")
-                    continue
-
-                if item.is_deleted:
-                    logger.info(f"{L}: DELETED {item}")
-                    
+            if item.is_deleted:
+                logger.info(f"{L}: DELETE {item}")
+                if not record or not record.is_deleted:
                     db.record_delete(item)
 
                     try:
@@ -214,14 +205,19 @@ def do_down():
                     except FileNotFoundError:
                         pass
 
-                    continue
+                continue
 
-                logger.debug(f"{L}: UDPATE {item}")
+            if not record:
+                logger.info(f"{L}: NEW {item}")
                 down_sync_items.records.append(item)
-                ## break
-            else:
-                logger.debug(f"{L}: NEW {item}")
-                down_sync_items.records.append(item)
+                continue
+
+            if record.data_hash == item.data_hash:
+                logger.debug(f"{L}: already have {item}")
+                continue
+
+            logger.info(f"{L}: UDPATE {item}")
+            down_sync_items.records.append(item)
 
         ## print(down_sync_items.records)
                 

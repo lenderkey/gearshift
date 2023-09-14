@@ -247,7 +247,6 @@ def mark_deleted(cutoff:str, force:bool=False):
             ''', (cutoff, False))
 
             row = cursor.fetchone()
-            print("B", row[0])
             return row[0]
     finally:        
         cursor.close()
