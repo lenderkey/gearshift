@@ -17,6 +17,7 @@ import time
 import requests
 import db
 import click
+import random
 from structures import SyncRequest
 
 L = "sync"
@@ -24,14 +25,13 @@ L = "sync"
 import logging
 logger = logging.getLogger(__name__)
 
-def do_up(max_files:int=10, max_size:int=1000 * 1000 * 1000):
+def do_up(max_files:int=10, max_size:int=10 * 1000 * 1000):
     import bl
 
     logger.info(f"{L}: do up")
 
     started = time.time()
 
-    db.setup()
     iterator = db.record_list(is_synced=False)
 
     db.start()
@@ -182,10 +182,10 @@ def do_down():
             break
 
         in_json = response.json()
-        ## pprint.pprint(in_json)
 
         in_sync_items = SyncRequest(**in_json)
         if not in_sync_items.records:
+            logger.debug(f"{L}: no records returned - can stop")
             break
 
         ## figure out which files we want
@@ -193,14 +193,19 @@ def do_down():
 
         for item in in_sync_items.records:
             if record := db.record_get(item):
-                if False and record.data_hash == item.data_hash:
-                    print("HAVE", record)
+                if record.data_hash == item.data_hash:
+                    logger.debug(f"{L}: already have {item}")
                     continue
 
-                print("NEED", record)
-                down_sync_items.records.append(record)
-                break
+                logger.debug(f"{L}: UDPATE {item}")
+                down_sync_items.records.append(item)
+                ## break
+            else:
+                logger.debug(f"{L}: NEW {item}")
+                down_sync_items.records.append(item)
 
+        ## print(down_sync_items.records)
+                
         ## request those files
         if down_sync_items.records:
             print(down_sync_items)
@@ -217,6 +222,36 @@ def do_down():
             if response.status_code != 200:
                 logger.error(f"{L}: unexpected status_code={response.status_code}")
                 break
+
+            data = response.content
+            print("HERE:XXX", len(data))
+            zipper = zipfile.ZipFile(io.BytesIO(data), mode="r")
+            for dst_name in zipper.namelist():
+                data = zipper.read(dst_name)
+                record = bl.data_analyze(dst_name, data=data)
+
+                postfix = f".{random.randint(100000, 999999)}"
+
+                try:
+                    os.makedirs(os.path.dirname(record.filepath), exist_ok=True)
+
+                    with open(record.filepath + postfix, "wb") as fout:
+                        fout.write(data)
+
+                    os.rename(record.filepath + postfix, record.filepath)
+                    logger.info(f"{L}: wrote {record.filepath} bytes={len(data)}")
+
+                    db.start()
+                    db.record_put(record)
+                    db.commit()
+                except:
+                    try: os.remove(record.filepath + postfix)
+                    except: pass
+
+                    logger.exception(f"{L}: unexpected error with in_file={record.filepath}")
+                    break
+
+            ## break
 
         ## figure out the next batch of files to sync
         max_added = ""
@@ -242,6 +277,8 @@ def do_down():
 @click.option("--up/--no-up", is_flag=True, default=True, help="Upload files to remote")
 @click.option("--down/--no-down", is_flag=True, default=True, help="Download files from remote")
 def sync(up: bool, down: bool):
+    db.setup()
+
     if up:
         do_up()
     if down:

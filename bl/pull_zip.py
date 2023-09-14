@@ -7,40 +7,37 @@ from structures import SyncRequest, Token, Connection
 import bl
 import db
 
-def pull_zip(raw_json:dict, token:Token, connection:Connection) -> bytes:
+L = "pull_zip"
+
+import zipfile
+import logging as logger
+
+def pull_zip(raw_json:bytes, token:Token, connection:Connection) -> bytes:
     """
     SERVER side when the CLIENT sends a SyncRequest for ZIP file
     """
-    print("PULL ZIP")
-    return b""
+    print("PULL ZIP", len(raw_json))
 
-    # print("HERE:XXX", raw_json)
-    out_sync_items = SyncRequest()
-    in_sync_items = SyncRequest(**raw_json)
+    pull_sync_items = SyncRequest(**raw_json)
 
-    for in_record in in_sync_items.records:
-        try:
-            db.start()
+    zcount = 0
+    zout = io.BytesIO()
+    zipped = None
 
-            if in_record.is_deleted:
-                bl.record_delete(in_record, token=token, connection=connection)
-            elif current_record := db.record_get(in_record):
-                db.record_touch(in_record)
-            else:
-                in_record.is_synced = False
-                out_sync_items.records.append(in_record)
+    with zipfile.ZipFile(zout, mode="w") as zipper:
+        for in_record in pull_sync_items.records:
+            in_record = db.record_get(in_record)
+            if not in_record or in_record.is_deleted:
+                continue
+            
+            try:
+                data = bl.record_digest(in_record)
+                zipper.writestr(in_record.filename, data)
+                zcount += 1
+            except IOError:
+                logger.exception(f"{L}: unexpected error with in_file={in_record.filepath}")
 
-            db.commit()
-        except:
-            db.rollback()
-            raise
+        zipper.close()
+        zipped = zout.getvalue()
 
-        '''
-        Right here we can add a big efficiency by looking for a
-        whether the file exists already. However, there are some security
-        concerns so we will do this later. Basically we don't
-        want people to be able to grab files that they don't have 
-        access to by hash.
-        '''
-
-    return out_sync_items
+    return zipped
