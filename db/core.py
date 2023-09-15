@@ -40,6 +40,12 @@ def setup() -> None:
             seen TEXT NOT NULL, -- isodatetime
             expires TEXT NOT NULL -- isodatetime
     )''')
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT            
+    )''')
  
 depth = 0
 
