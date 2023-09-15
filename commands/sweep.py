@@ -22,7 +22,7 @@ import bl
 
 L = "sweep"
 
-@cli.command("sweep", help="Build a Gearshift Database") # type: ignore
+@cli.command("sweep", help="client: build a Gearshift db of files") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
 def sweep(dry_run):
     """

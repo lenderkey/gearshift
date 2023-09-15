@@ -23,7 +23,7 @@ import db
 
 L = "server"
 
-@cli.command("server", help="Run Gearshift Server") # type: ignore
+@cli.command("server", help="server: run the Gearshift server") # type: ignore
 def server():
     """
     Example:

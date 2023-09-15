@@ -13,7 +13,7 @@ import click
 
 L = "token-create"
 
-@cli.command("token-create", help="") # type: ignore
+@cli.command("token-create", help="server: create an Authentication token") # type: ignore
 @click.option("--email", default=None, help="email address", required=True)
 @click.option("--path", default="/", help="path")
 @click.option("--expires", default=730, type=int, help="expires (in days from now)")

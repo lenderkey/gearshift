@@ -288,7 +288,7 @@ def do_down():
         if not in_sync_items.more:
             break
 
-@cli.command("sync", help="") # type: ignore
+@cli.command("sync", help="client: synchronize files and database with the server") # type: ignore
 @click.option("--up/--no-up", is_flag=True, default=True, help="Upload files to remote")
 @click.option("--down/--no-down", is_flag=True, default=True, help="Download files from remote")
 def sync(up: bool, down: bool):

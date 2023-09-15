@@ -12,7 +12,7 @@ L = "unsynced"
 
 import logging as logger
 
-@cli.command("unsynced", help="") # type: ignore
+@cli.command("unsynced", help="client: list files that are not synced") # type: ignore
 def unsynced():
     db.setup()
     for out_record in db.record_list(is_synced=False):

@@ -12,6 +12,6 @@ import yaml
 
 L = "token-edit"
 
-@cli.command("token-edit", help="") # type: ignore
+@cli.command("token-edit", help="server: edit an Authentication token") # type: ignore
 def token_edit():
-    pass
+    print("not implemented yet!")
