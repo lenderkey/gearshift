@@ -171,7 +171,7 @@ class Context:
         """
         The current key_hash, or None
         """
-        return self.get("keys.hash", required=False) or None
+        return self.get("security.key_hash", required=False) or None
     
     def server_key(self, keyhash:str=None) -> bytes:
         """
@@ -179,9 +179,9 @@ class Context:
 
         We allow the possibility for multiple keys
         """
-        keys_filename = self.get("keys.file", required=True)
+        keys_filename = self.get("security.key_file", required=True)
         keys_filename = self.resolve_path(keys_filename)
-        keys_hash = keyhash or self.get("keys.hash", required=True)
+        keys_hash = keyhash or self.get("security.key_hash", required=True)
 
         with open(keys_filename, "rb") as fin:
             for key in fin.read().split(b"\n"):

@@ -13,20 +13,47 @@ import click
 import hashlib
 import base64
 import helpers
+import os
+import sys
+from Context import Context
+
+import logging as logger
 
 L = "key-create"
 
-@cli.command("key-create", help="") # type: ignore
-def _():
+@cli.command("key-create", help="server: generate a key and key_hash") # type: ignore
+@click.option("--output", help="output file", default="~/.gearshift/keys/temporary.key")
+@click.option("--force/--no-force", is_flag=True, default=False, help="overwrite existing keyfile")
+def _(output:str, force:bool):
     from cryptography.fernet import Fernet
+
+    context = Context.instance
 
     key:bytes = Fernet.generate_key()
     keyhash = helpers.sha256_data(key)
 
-    with open("gearshift.key", "wb") as key_file:
+    output_filename = os.path.expanduser(output)
+
+    if os.path.exists(output_filename) and not force:
+        logger.fatal(f"{L}: {output_filename} already exists - remove, put aside or use --force")
+        sys.exit(1)
+
+    os.makedirs(os.path.dirname(output_filename), exist_ok=True)
+    with open(output_filename, "wb") as key_file:
         key_file.write(key)
 
-    print(keyhash)
+    print(f"""\
+Add (if needed) the following to {context.cfg_file}:
+
+security:
+  key_file: {output}
+  key_hash: {keyhash}
+
+If there is already a key_file, you can append the contents 
+of the key_file to it.
+
+You can give the key_file a better name if you prefer.
+""")
 
     # cipher_suite = Fernet(key)
     # # Open file to encrypt
