@@ -1,6 +1,7 @@
 #
+#   See ../README.md
 #   This will setup ~/.gearshift
-#   You need to have your own ~/Corpus with files to test
+#   You need to have your own ~/lenderkey/Corpus with files to test
 #
 set -ex
 [ ! -d ~/.gearshift ] && mkdir ~/.gearshift
