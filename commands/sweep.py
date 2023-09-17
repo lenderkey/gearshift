@@ -24,7 +24,7 @@ L = "sweep"
 
 @cli.command("sweep", help="client: build a Gearshift db of files") # type: ignore
 @click.option("--dry-run/--no-dry-run", is_flag=True)
-def sweep(dry_run):
+def _(dry_run):
     """
     Build a Gearshift Database
     

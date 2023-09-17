@@ -292,7 +292,7 @@ def do_down():
 @cli.command("sync", help="client: synchronize files and database with the server") # type: ignore
 @click.option("--up/--no-up", is_flag=True, default=True, help="Upload files to remote")
 @click.option("--down/--no-down", is_flag=True, default=True, help="Download files from remote")
-def sync(up: bool, down: bool):
+def _(up: bool, down: bool):
     db.setup()
 
     if up:

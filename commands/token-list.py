@@ -14,7 +14,7 @@ import yaml
 L = "token-list"
 
 @cli.command("token-list", help="server: list existing tokens") # type: ignore
-def token_list():
+def _():
     import db
 
     db.setup()

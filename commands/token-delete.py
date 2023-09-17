@@ -13,5 +13,5 @@ import yaml
 L = "token-delete"
 
 @cli.command("token-delete", help="server: delete an Authentication token") # type: ignore
-def token_delete():
+def _():
     print("not implemented yet!")

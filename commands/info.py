@@ -13,7 +13,7 @@ import yaml
 L = "info"
 
 @cli.command("info", help="tell me about this setup") # type: ignore
-def info():
+def _():
     context = Context.instance
 
     infod = {
