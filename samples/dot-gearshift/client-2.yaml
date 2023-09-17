@@ -1,0 +1,9 @@
+#
+# This is a pure clone of server.
+# Files are in plaintext
+#
+src:
+  root: ~/.gearshift/corpii/client-2
+  db: ~/.gearshift/db/client-2.db
+  url: http://127.0.0.1:8000/
+  token_id: xxx

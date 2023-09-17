@@ -1,0 +1,12 @@
+#
+# The Encryption at Risk server
+# Files are encrypted
+#
+src:
+  root: ~/.gearshift/corpii/server
+  db: ~/.gearshift/db/server.db
+
+security:
+  use_tokens: False
+  key_file: "~/.gearshift/keys/1.key"
+  key_hash: "Zdl_YEUEGi32D241xVUdxsZG25lEFUauNkTSRXgd-mU"
