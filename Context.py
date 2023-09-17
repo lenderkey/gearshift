@@ -47,9 +47,11 @@ class Context:
         logger.debug(f"{L}: {self.cfg_file=}")
 
     @classmethod
-    def setup(self, **ad):
+    def setup(self, **ad) -> "Context":
         if not Context.instance:
             Context.instance = Context(**ad)
+
+        return Context.instance
 
     @property
     def src_root(self):

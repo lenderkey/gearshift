@@ -10,14 +10,16 @@
 
 import click
 import os
+import json
 
 import logging as logger
 
 @click.group("cli", help="Gearshift Efficient File Transfer")
 @click.pass_context
 @click.option("--debug", is_flag=True)
+@click.option("--set", "set_", multiple=True, help="change configuration after it is loaded")
 @click.option("--cfg")
-def cli(ctx, debug, cfg):
+def cli(ctx, debug, cfg, set_):
     import logging
     from Context import Context
 
@@ -35,7 +37,20 @@ def cli(ctx, debug, cfg):
     if cfg and cfg.find("~") == 0:
         cfg = os.path.expanduser(cfg)
 
-    Context.setup(cfg_file=cfg)
+    context = Context.setup(cfg_file=cfg)
+
+    updates = {}
+    for kv in set_:
+        k, v = kv.split("=")
+        try: 
+            v = int(v)
+        except ValueError:
+            pass
+
+        updates[k] = v
+        context.set(k, v)
+
+    os.environ["GEARSHIFT_SET"] = json.dumps(updates)
 
 if __name__ == '__main__':
     FOLDERS = [

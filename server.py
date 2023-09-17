@@ -7,6 +7,7 @@ import io
 import mimetypes
 import asyncio
 import sqlite3
+import json
 
 from Context import Context
 from structures import Token, Connection
@@ -28,6 +29,13 @@ async def run_in_threadpool(func, *args, **kwargs):
 
 GEARSHIFT_CFG = os.environ["GEARSHIFT_CFG"]
 Context.setup(cfg_file=GEARSHIFT_CFG)
+
+GEARSHIFT_SET = os.environ.get("GEARSHIFT_SET")
+if GEARSHIFT_SET:
+    updates = json.loads(GEARSHIFT_SET)
+    for k, v in updates.items():
+        Context.instance.set(k, v)
+
 db.setup()
 
 security = HTTPBearer()
