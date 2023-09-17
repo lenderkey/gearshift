@@ -1,2 +1,2 @@
-./gearshift --cfg ~/.gearshift/gearshift-2.yaml sync --no-up
+../gearshift --cfg client-2 sync --no-up
 

@@ -27,6 +27,9 @@ def cli(ctx, debug, cfg):
         logging.basicConfig(level=logging.INFO)
 
     if cfg and cfg.find("/") == -1:
+        if cfg.find(".") == -1:
+            cfg += ".yaml"
+
         cfg = f"~/.gearshift/{cfg}"
 
     if cfg and cfg.find("~") == 0:
