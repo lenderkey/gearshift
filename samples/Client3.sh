@@ -5,6 +5,6 @@
 #
 ../gearshift \
     --cfg client-3 \
+    --set "src.folder=ENVS2060" \
     sync --no-up
-    ## --set "src.folder=ENVS2060" \
 

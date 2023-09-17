@@ -24,6 +24,10 @@ Client 1 is the origin of the files, and Client 2 is where they will end up.
 can equally control what is on the Server! This is just for the
 purposes of this example)
 
+You should create a folder called ~/lenderkey/Corpus and put files
+to sync in it. If you want to use Client3, make a subfolder called
+ENVS2060.
+
 
 ```
 cd samples
@@ -42,6 +46,9 @@ sh Client1.sh
 ## download files from the server (into a new folder)
 ## files will be in ~/.gearshift/corpii/client-2 and will be cleartext
 sh Client2.sh
+
+## like Client2.sh, but only syncs a folder named ENVS2060
+sh Client3.sh
 ```
 
 At this point you can try things like adding and removing files from 
