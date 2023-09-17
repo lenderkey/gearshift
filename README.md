@@ -7,8 +7,10 @@ Efficient Immutable File Transfer
 ## File Format
 
 * First 4 bytes: b"AES0"
-* Next byte: AES IV length
+* Next 1 byte: Key Hash length
+* Next N bytes: Key Hash (in ASCII)
+* Next 1 byte: AES IV length
 * Next N bytes: AES IV
-* Next 4 bytes: AES tag length
+* Next 1 byte: AES tag length
 * Next N bytes: AES tag
 * Remainder: AES encrypted data

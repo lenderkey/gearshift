@@ -44,7 +44,11 @@ def record_ingest(record:FileRecord, data:bytes) -> None:
                     if not record.key_hash:
                         fout.write(aes_ciphertext)
                     else:
+                        key_hash_bytes = record.key_hash.encode("ASCII")
+
                         fout.write(b"AES0")
+                        fout.write(bytes([ len(key_hash_bytes) ]))
+                        fout.write(key_hash_bytes)
                         fout.write(bytes([ len(aes_iv) ]))
                         fout.write(aes_iv)
                         fout.write(bytes([ len(aes_tag) ]))
