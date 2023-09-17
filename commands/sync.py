@@ -173,6 +173,7 @@ def do_down():
             params={
                 "limit": 5,
                 "added": since_added,
+                "folder": Context.instance.src_folder,
             },
             headers={
                 **bl.authorization_header(),

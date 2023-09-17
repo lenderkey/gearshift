@@ -163,17 +163,27 @@ def record_list(
     order_by:str=None,
     order_dir:str="ASC",
     limit:int=None,
+    folder:str="/",
 ):
     """
     Return a list of records
     """
+
+    if folder == "/":
+        folder = ""
+    elif folder and not folder.endswith("/"):
+        folder += "/"
     
     cursor = Context.instance.cursor()
 
     query = "SELECT filename, data_hash, key_hash, aes_iv, aes_tag, size, is_synced, is_deleted, added FROM records"
     params = []
-
     extras = []
+
+    if folder:
+        extras.append("filename LIKE ?")
+        params.append(f"{folder}%")
+
     if is_synced is not None:
         extras.append("is_synced = ?")
         params.append(int(is_synced))

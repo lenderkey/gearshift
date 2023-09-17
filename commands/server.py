@@ -32,7 +32,7 @@ def server():
 
     context = Context.instance
     logger.info(f"{L}: started {context.src_root=}")
-    print("AAA", id(context), context.get("security.use_tokens"))
+    # print("AAA", id(context), context.get("security.use_tokens"))
 
     command = [ 
         "uvicorn",

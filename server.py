@@ -71,6 +71,7 @@ async def get_authorized(authorization: HTTPAuthorizationCredentials = Security(
 async def download(
     request: Request,
     token: Token = Depends(get_authorized),
+    folder: str = "/",
 ):
     connection = Connection.from_request(request)
 
@@ -78,6 +79,7 @@ async def download(
         return bl.pull_json(connection=connection, 
             since_added=request.query_params.get("added"),
             limit=int(request.query_params.get("limit") or "0"),
+            folder=folder,
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON payload: {e}")

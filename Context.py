@@ -70,6 +70,13 @@ class Context:
         return self.get("src.user", required=False)
     
     @property
+    def src_folder(self):
+        """
+        This lets you sync a subfolder of the source only
+        """
+        return self.get("src.folder", required=False) or "/"
+    
+    @property
     def src_pem(self):  
         return self.get("src.pem", required=False)
     

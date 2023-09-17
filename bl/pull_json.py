@@ -7,6 +7,7 @@ import datetime
 def pull_json(
     since_added:str|datetime.datetime|None=None, 
     limit:int=None, max_size:int = 10 * 1000 * 1000, 
+    folder:str="/",
     connection:Connection=None,
 ) -> SyncRequest:
     out_sync_items = SyncRequest()
@@ -17,7 +18,7 @@ def pull_json(
     count = 0
     nbytes = 0
 
-    for item in db.record_list(order_by="added", since_added=since_added, limit=limit):
+    for item in db.record_list(order_by="added", since_added=since_added, limit=limit, folder=folder):
         ## none of your business, client
         item.key_hash = None
         item.is_synced = None

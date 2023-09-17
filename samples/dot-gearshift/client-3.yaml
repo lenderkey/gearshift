@@ -1,0 +1,10 @@
+#
+# This is a clone of the server, but only the folder ENVS2060
+# Files are in plaintext
+#
+src:
+  root: ~/.gearshift/corpii/client-3
+  db: ~/.gearshift/db/client-3.db
+  url: http://127.0.0.1:8000/
+  folder: ENVS2060
+  token_id: xxx

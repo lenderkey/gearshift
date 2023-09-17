@@ -10,4 +10,5 @@ cd ~/.gearshift
 rm -f db/*.db
 rm -rf corpii/*
 mkdir corpii/client-2
+mkdir corpii/client-3
 mkdir corpii/server
