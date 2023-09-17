@@ -39,7 +39,11 @@ def server():
         "server:app",
         "--reload",
     ]
-    result = subprocess.run(command, capture_output=False, cwd="/Users/david/lenderkey/gearshift", env={
-        **os.environ,
-        "GEARSHIFT_CFG": context.cfg_file,
-    })
+    result = subprocess.run(
+        command, 
+        capture_output=False, 
+        cwd=os.path.dirname(__file__), env={
+            **os.environ,
+            "GEARSHIFT_CFG": context.cfg_file,
+        },
+    )
