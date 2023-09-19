@@ -24,7 +24,7 @@ Client 1 is the origin of the files, and Client 2 is where they will end up.
 can equally control what is on the Server! This is just for the
 purposes of this example)
 
-You should create a folder called ~/lenderkey/Corpus and put files
+You should create a folder called ~/Corpus and put files
 to sync in it. If you want to use Client3, make a subfolder called
 ENVS2060.
 
@@ -40,7 +40,7 @@ sh Reset.sh
 sh Server.sh
 
 ## load files up to the server
-## files are from ~/lenderkey/Corpus and are cleartext
+## files are from ~/Corpus and are cleartext
 sh Client1.sh
 
 ## download files from the server (into a new folder)
@@ -52,5 +52,5 @@ sh Client3.sh
 ```
 
 At this point you can try things like adding and removing files from 
-`~/lenderkey/Corpus` and running `Client1.sh` and `Client2.sh` and see 
+`~/Corpus` and running `Client1.sh` and `Client2.sh` and see 
 the changes propagate.
