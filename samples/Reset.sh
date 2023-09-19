@@ -7,7 +7,9 @@ set -ex
 [ ! -d ~/.gearshift ] && mkdir ~/.gearshift
 cp -R dot-gearshift/* ~/.gearshift
 cd ~/.gearshift
+[ ! -d db ] && mkdir db
 rm -f db/*.db
+[ ! -d corpii ] && mkdir corpii
 rm -rf corpii/*
 mkdir corpii/client-2
 mkdir corpii/client-3
