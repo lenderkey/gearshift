@@ -30,7 +30,7 @@ def _(output:str, force:bool):
     context = Context.instance
 
     key:bytes = Fernet.generate_key()
-    keyhash = helpers.sha256_data(key)
+    key_hash = helpers.sha256_data(key)
 
     output_filename = os.path.expanduser(output)
 
@@ -47,7 +47,7 @@ Add (if needed) the following to {context.cfg_file}:
 
 security:
   key_file: {output}
-  key_hash: {keyhash}
+  key_hash: {key_hash}
 
 If there is already a key_file, you can append the contents 
 of the key_file to it.

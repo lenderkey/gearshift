@@ -13,6 +13,7 @@ import os
 import sys
 import sqlite3
 import base64
+import io
 
 import logging as logger
 
@@ -39,12 +40,12 @@ class Context:
             logger.fatal(f"{L}: {self.cfg_file=} not found")
             sys.exit(1)
 
-        if not os.path.isdir(self.src_root):
-            logger.fatal(f"{L}: {self.src_root=} is not a directory")
-            sys.exit(1)
+        # if not os.path.isdir(self.src_root):
+        #     logger.fatal(f"{L}: {self.src_root=} is not a directory")
+        #     sys.exit(1)
 
-        logger.debug(f"{L}: {self.src_root=}")
-        logger.debug(f"{L}: {self.cfg_file=}")
+        # logger.debug(f"{L}: {self.src_root=}")
+        # logger.debug(f"{L}: {self.cfg_file=}")
 
     @classmethod
     def setup(self, **ad) -> "Context":
@@ -182,7 +183,7 @@ class Context:
         """
         return self.get("security.key_hash", required=False) or None
     
-    def server_key(self, keyhash:str=None) -> bytes:
+    def server_key(self, key_hash:str=None) -> bytes:
         """
         This is the key for encrypting/decrypting files.
 
@@ -190,7 +191,7 @@ class Context:
         """
         keys_filename = self.get("security.key_file", required=True)
         keys_filename = self.resolve_path(keys_filename)
-        keys_hash = keyhash or self.get("security.key_hash", required=True)
+        keys_hash = key_hash or self.get("security.key_hash", required=True)
 
         with open(keys_filename, "rb") as fin:
             for key in fin.read().split(b"\n"):
@@ -201,6 +202,38 @@ class Context:
                 return base64.urlsafe_b64decode(key)
                 
         raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+
+    def aes_encrypt_to_stream(self, key_hash:str, data:bytes, fout:io.BytesIO) -> None:
+        if not key_hash:
+            key_hash = self.server_key_hash()
+
+        key = self.server_key(key_hash)
+        key_hash_bytes = key_hash.encode("ASCII")
+        aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
+
+        fout.write(b"AES0")
+        fout.write(bytes([ len(key_hash_bytes) ]))
+        fout.write(key_hash_bytes)
+        fout.write(bytes([ len(aes_iv) ]))
+        fout.write(aes_iv)
+        fout.write(bytes([ len(aes_tag) ]))
+        fout.write(aes_tag)
+        fout.write(aes_ciphertext)
+
+    def aes_decrypt_to_bytes(self, fin:io.BytesIO) -> bytes:
+        header = fin.read(4)
+        assert header == b"AES0"
+
+        key_hash_len = int(fin.read(1)[0])
+        key_hash = fin.read(key_hash_len).decode("ASCII")
+        aes_iv_len = int(fin.read(1)[0])
+        aes_iv = fin.read(aes_iv_len)
+        aes_tag_len = int(fin.read(1)[0])
+        aes_tag = fin.read(aes_tag_len)
+        data = fin.read()
+        key = self.server_key(key_hash)     
+        
+        return helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
 
 if __name__ == '__main__':
     context = Context()
