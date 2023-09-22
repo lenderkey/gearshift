@@ -39,7 +39,7 @@ def _(output:str, force:bool):
         sys.exit(1)
 
     os.makedirs(os.path.dirname(output_filename), exist_ok=True)
-    with open(output_filename, "wb") as key_file:
+    with open(output_filename, "ab") as key_file:
         key_file.write(key)
 
     print(f"""\
