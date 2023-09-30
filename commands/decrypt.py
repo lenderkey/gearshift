@@ -27,7 +27,8 @@ def _(input:str, output:str):
     if input == "-":
         plaintext = context.aes_decrypt_to_bytes(sys.stdin.buffer)
     else:
-        plaintext = context.aes_decrypt_to_bytes(open(input, "rb"))
+        with open(input, "rb") as fin:
+            plaintext = context.aes_decrypt_to_bytes(fin)
 
     if output == "-":
         sys.stdout.buffer.write(plaintext)
