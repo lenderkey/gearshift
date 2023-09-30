@@ -3,3 +3,4 @@ click
 fastapi[all]
 requests
 cryptography
+hvac

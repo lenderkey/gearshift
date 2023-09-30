@@ -14,6 +14,7 @@ import sys
 import sqlite3
 import base64
 import io
+import hvac
 
 import logging as logger
 
@@ -234,6 +235,21 @@ class Context:
         key = self.server_key(key_hash)     
         
         return helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
+    
+    def get_vault_client(self) -> hvac.Client:
+        L = "Context.get_vault_client"
+
+        vault_client = hvac.Client(
+            url='http://127.0.0.1:8200',  # Replace with your Vault address
+            ## token='s.xxxxxxx'  # Replace with your Vault token
+        )
+
+        # Check if the client is authenticated
+        if not vault_client.is_authenticated():
+            raise PermissionError("Authentication failed")
+        
+        logger.debug(f"{L}: {vault_client=}")
+        return vault_client
 
 if __name__ == '__main__':
     context = Context()
