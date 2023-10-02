@@ -31,9 +31,9 @@ def _(input:str, output:str):
             data = fin.read()
 
     if output == "-":
-        context.aes_encrypt_to_stream(key_hash=None, data=data, fout=sys.stdout.buffer)
+        context.aes_encrypt_to_stream(data=data, fout=sys.stdout.buffer, key_hash=None)
     else:
         with open(output, "wb") as fout:
-            context.aes_encrypt_to_stream(key_hash=None, data=data, fout=fout)
+            context.aes_encrypt_to_stream(data=data, fout=fout, key_hash=None)
 
    

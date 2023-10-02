@@ -7,6 +7,7 @@
 #
 
 from collections.abc import Callable
+from typing import Tuple
 
 import yaml
 import os
@@ -184,31 +185,61 @@ class Context:
         """
         return self.get("security.key_hash", required=False) or None
     
-    def server_key(self, key_hash:str=None) -> bytes:
+    def server_key(self, key_hash:str=None) -> Tuple[bytes, str]:
         """
         This is the key for encrypting/decrypting files.
 
         We allow the possibility for multiple keys
         """
-        keys_filename = self.get("security.key_file", required=True)
-        keys_filename = self.resolve_path(keys_filename)
-        keys_hash = key_hash or self.get("security.key_hash", required=True)
 
-        with open(keys_filename, "rb") as fin:
-            for key in fin.read().split(b"\n"):
-                this_hash = helpers.sha256_data(key)
-                if this_hash != keys_hash:
-                    continue
+        match self.get("security.key_system") or "fs":
+            case "vault":
+                key_hash = key_hash or "current" 
+                key_root = self.get_vault_key_root()
+                key_group = self.get_vault_key_group()
+                vault_client = self.get_vault_client()
+                key_path = f"{key_root}/{key_group}/{key_hash}"
+                try:
+                    read_response = vault_client.secrets.kv.v2.read_secret(
+                        path=key_path,
+                    )
+                except hvac.exceptions.InvalidPath:
+                    raise KeyError(f"{L}: key not found: {key_path}")
 
-                return base64.urlsafe_b64decode(key)
-                
-        raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+                data = read_response.get('data', {})
+                data = data.get('data', {})
+                key_encoded = data.get('key')
+                key = base64.urlsafe_b64decode(key_encoded)
+                ## key = base64.urlsafe_b64decode(key)
+                # print(key, len(key))
+                # sys.exit(0)
+                key_hash = data.get('key_hash')
+                if not key or not key_hash:
+                    raise KeyError(f"{L}: key not found: {key_path} [2]")
 
-    def aes_encrypt_to_stream(self, key_hash:str, data:bytes, fout:io.BytesIO) -> None:
-        if not key_hash:
-            key_hash = self.server_key_hash()
+                return key, key_hash
 
-        key = self.server_key(key_hash)
+            case "fs":
+                if not key_hash:
+                    key_hash = self.server_key_hash()
+
+                keys_filename = self.get("security.key_file", required=True)
+                keys_filename = self.resolve_path(keys_filename)
+                keys_hash = key_hash or self.get("security.key_hash", required=True)
+
+                with open(keys_filename, "rb") as fin:
+                    for key in fin.read().split(b"\n"):
+                        this_hash = helpers.sha256_data(key)
+                        if this_hash != keys_hash:
+                            continue
+
+                        return base64.urlsafe_b64decode(key), key_hash
+                        
+                raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+
+    def aes_encrypt_to_stream(self, data:bytes, fout:io.BytesIO, key_hash:str=None) -> None:
+        key, key_hash = self.server_key(key_hash)
+
         key_hash_bytes = key_hash.encode("ASCII")
         aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
 
@@ -232,7 +263,7 @@ class Context:
         aes_tag_len = int(fin.read(1)[0])
         aes_tag = fin.read(aes_tag_len)
         data = fin.read()
-        key = self.server_key(key_hash)     
+        key, _ = self.server_key(key_hash)     
         
         return helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
     

@@ -28,15 +28,13 @@ def _(key_group:str=None):
 
     key:bytes = Fernet.generate_key()
     key_hash = helpers.sha256_data(key)
-    key = base64.urlsafe_b64encode(key)
-    key = key.decode("ascii")
 
     ## keep password
     key_path = f"{key_root}/{key_group}/{key_hash}"
     vault_client.secrets.kv.v2.create_or_update_secret(
         path=key_path,
         secret={
-            "key": key,
+            "key": key.decode("ASCII"),
             "key_hash": key_hash,
         },
         mount_point='secret',
