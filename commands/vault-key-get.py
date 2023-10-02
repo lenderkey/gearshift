@@ -1,5 +1,5 @@
 #
-#   commands/vault-key-view.py
+#   commands/vault-key-get.py
 #   
 #   David Janes
 #   Gearshift
@@ -17,21 +17,24 @@ from Context import Context
 
 import logging as logger
 
-L = "vault-key-view"
-PATH = 'aes0'
+L = "vault-key-get"
 
 @cli.command(L, help="") # type: ignore
 @click.argument("--key-hash", default="current")
+@click.option("--key-group", is_flag=False, default=None, help="Key Group (will use default otherwise)")
 @click.option("--show-key", is_flag=True, default=False, help="output the key")
 @click.option("--make-current", is_flag=True, default=False, help="make this key the current key")
-def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False):
+def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False, key_group:str=None):
     import hvac
 
     context = Context.instance
+    key_root = context.get_vault_key_root()
+    key_group = key_group or context.get_vault_key_group()
     vault_client = context.get_vault_client()
+    key_path = f"{key_root}/{key_group}/{__key_hash}"
     try:
         read_response = vault_client.secrets.kv.v2.read_secret(
-            path=f'aes0/{__key_hash}',
+            path=key_path,
         )
     except hvac.exceptions.InvalidPath:
         logger.error(f"{L}: key not found: {__key_hash}")
@@ -45,9 +48,10 @@ def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False):
     if make_current:
         assert key
         assert key_hash
+        key_path = f"{key_root}/{key_group}/current"
 
         vault_client.secrets.kv.v2.create_or_update_secret(
-            path=f"aes0/current",
+            path=key_path,
             secret={
                 "key": key,
                 "key_hash": key_hash,
@@ -55,7 +59,7 @@ def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False):
             mount_point='secret',
         )
 
-        logger.info(f"{L}: key written to 'aes0/current'")
+        logger.info(f"{L}: key written to {key_path=}")
 
     if show_key:
         print(data['key'])
@@ -64,4 +68,4 @@ def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False):
 
     # keys = list_response.get('data', {}).get('keys', [])
     # for key in keys:
-    #     print(f"{PATH}.{key}")
+    #     print(f"{key_root}.{key}")

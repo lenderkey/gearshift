@@ -236,6 +236,14 @@ class Context:
         
         return helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
     
+    def get_vault_key_root(self) -> str:
+        return "gearshift-keys"
+    
+    def get_vault_key_group(self) -> str:
+        """
+        """
+        return self.get("vault.key_group", required=False) or "default"
+    
     def get_vault_client(self) -> hvac.Client:
         L = "Context.get_vault_client"
 
