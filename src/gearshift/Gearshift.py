@@ -1,5 +1,5 @@
 #
-#   Context.py
+#   Gearshift.py
 #
 #   David Janes
 #   Gearshift
@@ -18,15 +18,13 @@ import hvac
 
 import logging as logger
 
-import helpers
+L = "Gearshift"
 
-L = "Context"
-
-class Context:
+class Gearshift:
     instance = None
 
     def __init__(self, cfg_file=None):
-        L = "Context.__init__"
+        L = "Gearshift.__init__"
 
         self._connection = None
 
@@ -42,11 +40,11 @@ class Context:
             sys.exit(1)
 
     @classmethod
-    def setup(self, **ad) -> "Context":
-        if not Context.instance:
-            Context.instance = Context(**ad)
+    def setup(self, **ad) -> "Gearshift":
+        if not Gearshift.instance:
+            Gearshift.instance = Gearshift(**ad)
 
-        return Context.instance
+        return Gearshift.instance
 
     @property
     def src_root(self):
@@ -106,10 +104,12 @@ class Context:
         return self.resolve_path(self.get("src.db", required=True))
 
     def get(self, keypath:str, default:bool=None, required=False):
-        return helpers.get(self.cfg, keypath, default=default, required=required)
+        from .helpers import get
+        return get(self.cfg, keypath, default=default, required=required)
 
     def set(self, keypath:str, value):
-        return helpers.set(self.cfg, keypath, value)
+        from .helpers import set
+        return set(self.cfg, keypath, value)
 
     def resolve_path(self, path:str):
         if path is None:
@@ -140,7 +140,7 @@ class Context:
         Will return True if the link exists.
         Consider returning an enumeration.
         """
-        L = "Context.ingest_link"
+        L = "Gearshift.ingest_link"
 
         if os.path.isabs(dst_name):
             raise ValueError(f"{L}: {dst_name=} must be relative")
@@ -183,6 +183,7 @@ class Context:
 
         We allow the possibility for multiple keys
         """
+        from .helpers import sha256_data
 
         match self.get("security.key_system") or "fs":
             case "vault":
@@ -218,7 +219,7 @@ class Context:
 
                 with open(keys_filename, "rb") as fin:
                     for key in fin.read().split(b"\n"):
-                        this_hash = helpers.sha256_data(key)
+                        this_hash = sha256_data(key)
                         if this_hash != keys_hash:
                             continue
 
@@ -227,10 +228,12 @@ class Context:
                 raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
 
     def aes_encrypt_to_stream(self, data:bytes, fout:io.BytesIO, key_hash:str=None) -> None:
+        from .helpers import aes_encrypt
+
         key, key_hash = self.server_key(key_hash)
 
         key_hash_bytes = key_hash.encode("ASCII")
-        aes_iv, aes_tag, aes_ciphertext = helpers.aes_encrypt(key, data)
+        aes_iv, aes_tag, aes_ciphertext = aes_encrypt(key, data)
 
         fout.write(b"AES0")
         fout.write(bytes([ len(key_hash_bytes) ]))
@@ -242,6 +245,8 @@ class Context:
         fout.write(aes_ciphertext)
 
     def aes_decrypt_to_bytes(self, fin:io.BytesIO) -> bytes:
+        from .helpers import aes_decrypt
+
         header = fin.read(4)
         assert header == b"AES0"
 
@@ -254,7 +259,7 @@ class Context:
         data = fin.read()
         key, _ = self.server_key(key_hash)     
         
-        return helpers.aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
+        return aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
     
     def get_vault_key_root(self) -> str:
         return "gearshift-keys"
@@ -265,7 +270,7 @@ class Context:
         return self.get("vault.key_group", required=False) or "default"
     
     def get_vault_client(self) -> hvac.Client:
-        L = "Context.get_vault_client"
+        L = "Gearshift.get_vault_client"
 
         vault_client = hvac.Client(
             url='http://127.0.0.1:8200',  # Replace with your Vault address
@@ -280,5 +285,5 @@ class Context:
         return vault_client
 
 if __name__ == '__main__':
-    context = Context()
+    context = Gearshift()
     ## print(context.db)

@@ -21,7 +21,7 @@ import logging as logger
 @click.option("--cfg")
 def cli(ctx, debug, cfg, set_):
     import logging
-    from Context import Context
+    from gearshift import Gearshift ## type: ignore
 
     if debug:
         logging.basicConfig(level=logging.DEBUG)
@@ -37,7 +37,7 @@ def cli(ctx, debug, cfg, set_):
     if cfg and cfg.find("~") == 0:
         cfg = os.path.expanduser(cfg)
 
-    context = Context.setup(cfg_file=cfg)
+    context = Gearshift.setup(cfg_file=cfg)
 
     updates = {}
     for kv in set_:
@@ -54,7 +54,7 @@ def cli(ctx, debug, cfg, set_):
 
 if __name__ == '__main__':
     FOLDERS = [
-        os.path.dirname(__file__)
+        os.path.join(os.path.dirname(__file__), ".."),
     ]
 
     for FOLDER in FOLDERS:

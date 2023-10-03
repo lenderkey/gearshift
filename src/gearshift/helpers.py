@@ -15,7 +15,6 @@ import base64
 from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.backends import default_backend
 
-
 def _list_advance(o, keypath:str, required:bool, key:str=None) -> Any:
     while isinstance(o, list):
         if len(o) == 0 and required:
