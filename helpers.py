@@ -6,18 +6,15 @@
 #   2023-03-23
 #
 
-from typing import BinaryIO, Union, Any, Tuple
+from typing import BinaryIO, Any, Tuple
 
-import re
 import hashlib
 import os
 import base64
-import datetime
 
 from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.backends import default_backend
 
-import logging as logger
 
 def _list_advance(o, keypath:str, required:bool, key:str=None) -> Any:
     while isinstance(o, list):
@@ -75,7 +72,6 @@ def get(d:dict, keypath:str, default:Any=None, required:bool=False, first:bool=T
     else:
         return default
 
-
 def sha256_file(fd:BinaryIO) -> str:
     sha256 = hashlib.sha256()
     while True:
@@ -111,52 +107,6 @@ def md5_data(*av) -> str:
         hasher.update(data)
 
     return base64.urlsafe_b64encode(hasher.digest()).decode("utf-8").rstrip("=")
-
-def walker():
-    from Context import Context
-
-    root = Context.instance.src_root
-    for folder, dirs, files in os.walk(root):
-        dirs[:] = [d for d in dirs if not d.startswith('.')]
-        files[:] = [d for d in files if not d.startswith('.')]
-
-        for filename in files:
-            if filename.startswith("."):
-                continue
-
-            filename = os.path.join(folder, filename)
-            filename = os.path.relpath(filename, root)
-
-            yield filename
-
-def now() -> str:
-    return format_datetime(datetime.datetime.utcnow())
-
-def format_datetime(dt:str|datetime.datetime|None) -> str|None:
-    if dt is None:
-        return None
-    elif isinstance(dt, datetime.datetime):
-        return dt.isoformat()
-    elif isinstance(dt, str):
-        return dt
-    else:
-        raise TypeError(f"expected datetime or str, not {type(dt)}")
-
-def to_datetime(dt:str|datetime.datetime|None) -> datetime.datetime|None:
-    if dt is None:
-        return None
-    elif isinstance(dt, str):
-        return datetime.datetime.fromisoformat(dt)
-    elif isinstance(dt, datetime.datetime):
-        return dt
-    else:
-        raise TypeError(f"expected datetime or str, not {type(dt)}")
-
-def default_serializer(o):
-    if isinstance(o, datetime.datetime):
-        return format_datetime(o)
-    
-    raise TypeError("Object of type datetime is not JSON serializable")
 
 def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
     iv = os.urandom(12)
