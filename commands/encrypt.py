@@ -7,16 +7,12 @@
 #
 
 import sys
-import io
 
 import click
-import helpers
 
 from Context import Context
 
 L = "encrypt"
-
-import logging as logger
 
 @cli.command("encrypt", help="encrypt a file") # type: ignore
 @click.argument("input", default="-")

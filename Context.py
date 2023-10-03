@@ -6,7 +6,6 @@
 #   2023-03-23
 #
 
-from collections.abc import Callable
 from typing import Tuple
 
 import yaml
@@ -41,13 +40,6 @@ class Context:
         except IOError:
             logger.fatal(f"{L}: {self.cfg_file=} not found")
             sys.exit(1)
-
-        # if not os.path.isdir(self.src_root):
-        #     logger.fatal(f"{L}: {self.src_root=} is not a directory")
-        #     sys.exit(1)
-
-        # logger.debug(f"{L}: {self.src_root=}")
-        # logger.debug(f"{L}: {self.cfg_file=}")
 
     @classmethod
     def setup(self, **ad) -> "Context":
@@ -210,9 +202,6 @@ class Context:
                 data = data.get('data', {})
                 key_encoded = data.get('key')
                 key = base64.urlsafe_b64decode(key_encoded)
-                ## key = base64.urlsafe_b64decode(key)
-                # print(key, len(key))
-                # sys.exit(0)
                 key_hash = data.get('key_hash')
                 if not key or not key_hash:
                     raise KeyError(f"{L}: key not found: {key_path} [2]")
