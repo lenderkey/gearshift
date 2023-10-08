@@ -25,7 +25,7 @@ L = "vault-key-get"
 def _(__key_hash:str=None, show_key:bool=False, make_current:bool=False, key_group:str=None):
     import hvac
 
-    context = Gearshift.instance
+    context = Gearshift.instance()
     key_root = context.get_vault_key_root()
     key_group = key_group or context.get_vault_key_group()
     vault_client = context.get_vault_client()

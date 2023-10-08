@@ -1,50 +1,56 @@
 import builtins
 
 import builtins
-import codecs
 
-class ROT13File:
-    def __init__(self, filename, mode):
+class AES0File:
+    def __init__(self, filename, mode="r", encoding=None, context=None, **ad):
+        from .Gearshift import Gearshift
+
         self.filename = filename
         self.mode = mode
-        self.file = None
+        self.encoding = encoding
+        self.fio = None
+        self.context = context or Gearshift.instance()
+        self.key_hash = None
 
     def __enter__(self):
         if 'w' in self.mode:
-            self.file = builtins.open(self.filename + ".rot13", self.mode)
+            self.fio = builtins.open(self.filename + ".aes0", "wb")
+            self.filename = self.filename + ".aes0"
             return self
         elif 'r' in self.mode:
             try:
-                self.file = builtins.open(self.filename + ".rot13", self.mode)
+                self.fio = builtins.open(self.filename + ".aes0", "rb")
+                self.filename = self.filename + ".aes0"
             except FileNotFoundError:
-                self.file = builtins.open(self.filename, self.mode)
+                self.fio = builtins.open(self.filename, self.mode)
             return self
         else:
             raise ValueError("Unsupported mode: {}".format(self.mode))
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.file:
-            self.file.close()
+        if self.fio:
+            self.fio.close()
 
     def write(self, data):
-        if 'w' in self.mode:
-            self.file.write(codecs.encode(data, 'rot_13'))
+        assert 'w' in self.mode
+
+        if self.mode == "w":
+            data = data.encode(self.encoding or "utf-8")
+        
+        self.context.aes_encrypt_to_stream(data, fout=self.fio, key_hash=self.key_hash)
 
     def read(self):
-        content = self.file.read()
-        if self.filename.endswith('.rot13'):
-            return codecs.decode(content, 'rot_13')
-        return content
+        if not self.filename.endswith('.aes0'):
+            return self.fio.read()
+        
+        data = self.context.aes_decrypt_to_bytes(fin=self.fio)
 
-def open(filename, mode='r'):
-    return ROT13File(filename, mode)
+        if self.mode == "r":
+            data = data.decode(self.encoding or "utf-8")
 
-if __name__ == '__main__':
-    # Testing
-    # Writing to a file
-    with open('example.txt', 'w') as fout:
-        fout.write('Hello, World!')
+        return data
 
-    # Reading from a file
-    with open('example.txt', 'r') as fin:
-        print(fin.read())  # Urfry, Jbeyq!
+def open(filename, mode="r", *av, **ad):
+    return AES0File(filename=filename, mode=mode, *av, **ad)
+

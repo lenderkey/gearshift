@@ -21,7 +21,7 @@ import logging as logger
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="plaintext file")
 def _(input:str, output:str):
-    context = Gearshift.instance
+    context = Gearshift.instance()
 
     if input == "-":
         plaintext = context.aes_decrypt_to_bytes(sys.stdin.buffer)

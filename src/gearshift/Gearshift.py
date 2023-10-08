@@ -6,7 +6,7 @@
 #   2023-03-23
 #
 
-from typing import Tuple
+from typing import Tuple, Union
 
 import yaml
 import os
@@ -21,7 +21,7 @@ import logging as logger
 L = "Gearshift"
 
 class Gearshift:
-    instance = None
+    _instance = None
 
     def __init__(self, cfg_file=None):
         L = "Gearshift.__init__"
@@ -40,12 +40,12 @@ class Gearshift:
             sys.exit(1)
 
     @classmethod
-    def setup(self, **ad) -> "Gearshift":
-        if not Gearshift.instance:
-            Gearshift.instance = Gearshift(**ad)
+    def instance(self, **ad) -> "Gearshift":
+        if not Gearshift._instance:
+            Gearshift._instance = Gearshift(**ad)
 
-        return Gearshift.instance
-
+        return Gearshift._instance
+    
     @property
     def src_root(self):
         return self.resolve_path(self.get("src.root", required=True))

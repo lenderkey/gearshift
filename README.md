@@ -17,7 +17,7 @@ Encryption at Rest Tools
 ### Vault Setup
 ### Local FS Setup
 
-To setup, have a `~/.gearshift/gearshift.yaml` that looks like this
+To instance(), have a `~/.gearshift/gearshift.yaml` that looks like this
 
 ```
 security:
