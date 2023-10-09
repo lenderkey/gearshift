@@ -1,36 +1,55 @@
 import builtins
-
-import builtins
+import os
+import random
 
 class AES0File:
     def __init__(self, filename, mode="r", encoding=None, context=None, **ad):
         from .Gearshift import Gearshift
 
         self.filename = filename
+        self.filename_aes0 = filename + ".aes0"  
         self.mode = mode
         self.encoding = encoding
         self.fio = None
         self.context = context or Gearshift.instance()
         self.key_hash = None
 
+        self.filename_tmp = None
+
     def __enter__(self):
-        if 'w' in self.mode:
-            self.fio = builtins.open(self.filename + ".aes0", "wb")
-            self.filename = self.filename + ".aes0"
-            return self
-        elif 'r' in self.mode:
-            try:
-                self.fio = builtins.open(self.filename + ".aes0", "rb")
-                self.filename = self.filename + ".aes0"
-            except FileNotFoundError:
-                self.fio = builtins.open(self.filename, self.mode)
-            return self
-        else:
-            raise ValueError("Unsupported mode: {}".format(self.mode))
+        match self.mode:
+            case 'w' | 'wb':
+                dir, base = os.path.split(self.filename_aes0)
+                base = f".{base}.{random.randint(0, 999999):06d}"
+                self.filename_tmp = os.path.join(dir, base)
+                self.fio = builtins.open(self.filename_tmp, "wb")
+                self.filename = self.filename_aes0
+
+                return self
+            
+            case 'r' | 'rb':
+                try:
+                    self.fio = builtins.open(self.filename_aes0, "rb")
+                    self.filename = self.filename_aes0
+                except FileNotFoundError:
+                    self.fio = builtins.open(self.filename, self.mode)
+
+                return self
+            
+            case _:
+                raise ValueError(f"Unsupported mode: {self.mode}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.fio:
             self.fio.close()
+
+        if self.filename_tmp:
+            if exc_type:
+                os.remove(self.filename_tmp)
+            else:
+                os.rename(self.filename_tmp, self.filename_aes0)
+
+            self.filename_tmp = None
 
     def write(self, data):
         assert 'w' in self.mode
