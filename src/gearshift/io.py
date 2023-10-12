@@ -49,6 +49,10 @@ class AES0File:
             else:
                 os.rename(self.filename_tmp, self.filename_aes0)
 
+                ## don't keep an original file around
+                try: os.remove(self.filename)
+                except IOError: pass
+
             self.filename_tmp = None
 
     def write(self, data):
