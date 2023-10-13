@@ -23,15 +23,14 @@ class AES0File:
                 base = f".{base}.{random.randint(0, 999999):06d}"
                 self.filename_tmp = os.path.join(dir, base)
                 self.fio = builtins.open(self.filename_tmp, "wb")
-                self.filename = self.filename_aes0
 
                 return self
             
             case 'r' | 'rb':
                 try:
                     self.fio = builtins.open(self.filename_aes0, "rb")
-                    self.filename = self.filename_aes0
                 except FileNotFoundError:
+                    self.filename_aes0 = None
                     self.fio = builtins.open(self.filename, self.mode)
 
                 return self
@@ -43,13 +42,12 @@ class AES0File:
         if self.fio:
             self.fio.close()
 
-        if self.filename_tmp:
+        if self.filename_tmp and 'w' in self.mode:
             if exc_type:
                 os.remove(self.filename_tmp)
             else:
                 os.rename(self.filename_tmp, self.filename_aes0)
 
-                ## don't keep an original file around
                 try: os.remove(self.filename)
                 except IOError: pass
 
@@ -64,7 +62,7 @@ class AES0File:
         self.context.aes_encrypt_to_stream(data, fout=self.fio, key_hash=self.key_hash)
 
     def read(self):
-        if not self.filename.endswith('.aes0'):
+        if not self.filename_aes0:
             return self.fio.read()
         
         data = self.context.aes_decrypt_to_bytes(fin=self.fio)

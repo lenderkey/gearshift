@@ -23,6 +23,12 @@ L = "Gearshift"
 class Gearshift:
     _instance = None
 
+    BLOCK_AES_IV = b"I"
+    BLOCK_AES_TAG = b"T"
+    BLOCK_KEY_HASH = b"H"
+    BLOCK_ZLIB = b"Z"
+    BLOCK_END = b"\0"
+
     def __init__(self, cfg_file=None):
         L = "Gearshift.__init__"
 
@@ -236,26 +242,70 @@ class Gearshift:
         aes_iv, aes_tag, aes_ciphertext = aes_encrypt(key, data)
 
         fout.write(b"AES0")
-        fout.write(bytes([ len(key_hash_bytes) ]))
+
+        fout.write(Gearshift.BLOCK_KEY_HASH)
+        fout.write(len(key_hash_bytes).to_bytes(1, "big"))
         fout.write(key_hash_bytes)
-        fout.write(bytes([ len(aes_iv) ]))
+
+        fout.write(Gearshift.BLOCK_AES_IV)
+        fout.write(len(aes_iv).to_bytes(1, "big"))
         fout.write(aes_iv)
-        fout.write(bytes([ len(aes_tag) ]))
+
+        fout.write(Gearshift.BLOCK_AES_TAG)
+        fout.write(len(aes_tag).to_bytes(1, "big"))
         fout.write(aes_tag)
+
+        fout.write(Gearshift.BLOCK_END)
+        fout.write(b"\0")
+
         fout.write(aes_ciphertext)
 
     def aes_decrypt_to_bytes(self, fin:io.BytesIO) -> bytes:
         from .helpers import aes_decrypt
+        import string
 
         header = fin.read(4)
         assert header == b"AES0"
 
-        key_hash_len = int(fin.read(1)[0])
-        key_hash = fin.read(key_hash_len).decode("ASCII")
-        aes_iv_len = int(fin.read(1)[0])
-        aes_iv = fin.read(aes_iv_len)
-        aes_tag_len = int(fin.read(1)[0])
-        aes_tag = fin.read(aes_tag_len)
+        key_hash = None
+        aes_iv = None
+        aes_tag = None
+
+        stop = False
+        while not stop:
+            block_tag = fin.read(1)
+            if block_tag is None:
+                break
+
+            block_length = fin.read(1) or 0
+
+            match block_tag:
+                case Gearshift.BLOCK_END:
+                    stop = True
+                case Gearshift.BLOCK_AES_IV:
+                    aes_iv = fin.read(int.from_bytes(block_length, "big"))
+                case Gearshift.BLOCK_AES_TAG:
+                    aes_tag = fin.read(int.from_bytes(block_length, "big"))
+                case Gearshift.BLOCK_KEY_HASH:
+                    key_hash = fin.read(int.from_bytes(block_length, "big"))
+                    key_hash = key_hash.decode("ASCII")
+                case otherwise:
+                    if block_tag in string.ascii_uppercase:
+                        raise ValueError(f"{L}: unknown (required) block tag: {block_tag}")
+                    
+                    logger.info(f"{L}: unknown (optional) block tag: {block_tag}")
+
+        assert aes_iv
+        assert aes_tag
+        assert key_hash
+
+        # key_hash_len = int(fin.read(1)[0])
+        # key_hash = fin.read(key_hash_len).decode("ASCII")
+        # aes_iv_len = int(fin.read(1)[0])
+        # aes_iv = fin.read(aes_iv_len)
+        # aes_tag_len = int(fin.read(1)[0])
+        # aes_tag = fin.read(aes_tag_len)
+
         data = fin.read()
         key, _ = self.server_key(key_hash)     
         

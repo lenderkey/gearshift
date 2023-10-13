@@ -6,13 +6,28 @@ Encryption at Rest Tools
 ### File Format
 
 * First 4 bytes: b"AES0"
-* Next 1 byte: Key Hash length
-* Next N bytes: Key Hash (in ASCII)
-* Next 1 byte: AES IV length
-* Next N bytes: AES IV
-* Next 1 byte: AES tag length
-* Next N bytes: AES tag
-* Remainder: AES encrypted data
+* N "Blocks"
+
+Each block is:
+
+* 1 byte: length (N) of data
+* 1 byte: type
+* N bytes: data
+
+All upper case "types" must be understood by Readers.
+Lower case "types" are optional and can be ignored if not understood.
+
+Blocks are ended by:
+
+* 1 byte: type (0x00)
+* 1 byte: length (0x00)
+
+The types are:
+
+* 'I': AES IV
+* 'T': AES Tag
+* 'H': Key Hash (in ASCII)
+* 'Z': Data is Compressed by ZLIB
 
 ### Vault Setup
 ### Local FS Setup
