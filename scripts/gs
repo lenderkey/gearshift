@@ -1,6 +1,0 @@
-#!/bin/bash
-
-WHERE=$(dirname "${0}")
-
-. $WHERE/env/bin/activate
-python $WHERE/gearshift.py $@

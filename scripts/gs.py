@@ -5,7 +5,7 @@
 #   Gearshift
 #   2023-09-23
 #   
-#   Efficient File Transfer
+#   Encryption at Rest
 #
 
 import click
@@ -14,7 +14,7 @@ import json
 
 import logging as logger
 
-@click.group("cli", help="Gearshift Efficient File Transfer")
+@click.group("cli", help="Gearshift - Encryption at Rest")
 @click.pass_context
 @click.option("--debug", is_flag=True)
 @click.option("--set", "set_", multiple=True, help="change configuration after it is loaded")
@@ -37,7 +37,7 @@ def cli(ctx, debug, cfg, set_):
     if cfg and cfg.find("~") == 0:
         cfg = os.path.expanduser(cfg)
 
-    context = Gearshift.instance()(cfg_file=cfg)
+    context = Gearshift.instance(cfg_file=cfg)
 
     updates = {}
     for kv in set_:

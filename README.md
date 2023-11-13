@@ -50,29 +50,30 @@ Otherwise, Vault is the preferred way to do things.
 ### Encrypting and Decrypting files
 
 You can use the `gearshift` command to encrypt and decrypt files.
+You can find it in `./scripts`
 
 Encrypt to stdin to stdout:
 
 ```
-gearshift encrypt < file.txt > file.txt.aes
+gearshift encrypt < file.txt > file.txt.aes0
 ```
 
 Encrypt a file to a file:
 
 ```
-gearshift encrypt file.txt --output file.txt.aes
+gearshift encrypt file.txt --output file.txt.aes0
 ```
 
 Decrypt to stdin to stdout:
 
 ```
-gearshift decrypt < file.txt.aes > file.txt
+gearshift decrypt < file.txt.aes0 > file.txt
 ```
 
 Decrypt a file to a file:
 
 ```
-gearshift decrypt file.txt.aes --output file.txt
+gearshift decrypt file.txt.aes0 --output file.txt
 ```
 
 ### Vault Commands
