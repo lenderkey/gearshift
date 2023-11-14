@@ -86,28 +86,8 @@ class Gearshift:
     def src_path(self, src_name):
         return os.path.join(self.src_root, src_name)
     
-    # @property
-    # def dst_root(self):
-    #     return self.resolve_path(self.get("dst.root", required=True))
-        
-    # @property
-    # def dst_link_root(self):
-    #     links = self.get("dst.links")
-    #     if links:
-    #         return self.resolve_path(links)
-        
-    #     return os.path.join(self.dst_root, ".links")
-        
     def dst_link_path(self, key_hash:str, data_hash:str) -> str:
        return os.path.join(self.src_root, ".links", key_hash or "plaintext", data_hash[:2], data_hash[2:4], data_hash)
-
-    # def dst_store_path(self, filename) -> str:
-    #     assert not os.path.isabs(filename)
-    #     return os.path.join(self.dst_root, "store", filename)
-
-    @property
-    def db_path(self):
-        return self.resolve_path(self.get("src.db", required=True))
 
     def get(self, keypath:str, default:bool=None, required=False):
         from .helpers import get
@@ -129,14 +109,6 @@ class Gearshift:
         else:
             return path
         
-    def cursor(self):
-        if not self._connection:
-            self._connection = sqlite3.connect(self.db_path)
-
-        cursor = self._connection.cursor()
-
-        return cursor
-    
     def dst_has_hash(self, data_hash):
         link_filename = self.dst_link_path(data_hash)
         return os.path.exists(link_filename)

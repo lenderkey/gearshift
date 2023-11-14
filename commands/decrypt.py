@@ -21,13 +21,15 @@ import logging as logger
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="plaintext file")
 def _(input:str, output:str):
+    from gearshift import AES0File
+
     context = Gearshift.instance()
 
     if input == "-":
         plaintext = context.aes_decrypt_to_bytes(sys.stdin.buffer)
     else:
-        with open(input, "rb") as fin:
-            plaintext = context.aes_decrypt_to_bytes(fin)
+        with AES0File(input, "rb") as fin:
+            plaintext = fin.read()
 
     if output == "-":
         sys.stdout.buffer.write(plaintext)
