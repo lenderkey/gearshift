@@ -6,8 +6,12 @@ class Gearshift:
     def __init__(self, filename, mode="r", encoding=None, context=None, **ad):
         from .context import GearshiftContext
 
+        if filename.endswith(".gear"):
+            filename = filename[:-5]
+
         self.filename = filename
-        self.filename_gear = filename + ".gear"  
+        self.filename_gear = filename + ".gear"
+
         self.mode = mode
         self.encoding = encoding
         self.fio = None
