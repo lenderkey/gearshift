@@ -6,7 +6,7 @@
 #   2023-03-23
 #
 
-from typing import Tuple, Union
+from typing import Tuple, Union, ForwardRef
 
 import yaml
 import os
@@ -14,13 +14,14 @@ import sys
 import sqlite3
 import base64
 import io
-import hvac
 
 import logging as logger
 
-L = "Gearshift"
+hvac = ForwardRef("hvac")
 
-class Gearshift:
+L = "GearshiftContext"
+
+class GearshiftContext:
     _instance = None
 
     BLOCK_AES_IV = b"I"
@@ -46,11 +47,11 @@ class Gearshift:
             sys.exit(1)
 
     @classmethod
-    def instance(self, **ad) -> "Gearshift":
-        if not Gearshift._instance:
-            Gearshift._instance = Gearshift(**ad)
+    def instance(self, **ad) -> "GearshiftContext":
+        if not GearshiftContext._instance:
+            GearshiftContext._instance = GearshiftContext(**ad)
 
-        return Gearshift._instance
+        return GearshiftContext._instance
     
     @property
     def src_root(self):
@@ -213,21 +214,21 @@ class Gearshift:
         key_hash_bytes = key_hash.encode("ASCII")
         aes_iv, aes_tag, aes_ciphertext = aes_encrypt(key, data)
 
-        fout.write(b"AES0")
+        fout.write(b"GEAR")
 
-        fout.write(Gearshift.BLOCK_KEY_HASH)
+        fout.write(GearshiftContext.BLOCK_KEY_HASH)
         fout.write(len(key_hash_bytes).to_bytes(1, "big"))
         fout.write(key_hash_bytes)
 
-        fout.write(Gearshift.BLOCK_AES_IV)
+        fout.write(GearshiftContext.BLOCK_AES_IV)
         fout.write(len(aes_iv).to_bytes(1, "big"))
         fout.write(aes_iv)
 
-        fout.write(Gearshift.BLOCK_AES_TAG)
+        fout.write(GearshiftContext.BLOCK_AES_TAG)
         fout.write(len(aes_tag).to_bytes(1, "big"))
         fout.write(aes_tag)
 
-        fout.write(Gearshift.BLOCK_END)
+        fout.write(GearshiftContext.BLOCK_END)
         fout.write(b"\0")
 
         fout.write(aes_ciphertext)
@@ -237,7 +238,7 @@ class Gearshift:
         import string
 
         header = fin.read(4)
-        assert header == b"AES0"
+        assert header == b"GEAR"
 
         key_hash = None
         aes_iv = None
@@ -252,13 +253,13 @@ class Gearshift:
             block_length = fin.read(1) or 0
 
             match block_tag:
-                case Gearshift.BLOCK_END:
+                case GearshiftContext.BLOCK_END:
                     stop = True
-                case Gearshift.BLOCK_AES_IV:
+                case GearshiftContext.BLOCK_AES_IV:
                     aes_iv = fin.read(int.from_bytes(block_length, "big"))
-                case Gearshift.BLOCK_AES_TAG:
+                case GearshiftContext.BLOCK_AES_TAG:
                     aes_tag = fin.read(int.from_bytes(block_length, "big"))
-                case Gearshift.BLOCK_KEY_HASH:
+                case GearshiftContext.BLOCK_KEY_HASH:
                     key_hash = fin.read(int.from_bytes(block_length, "big"))
                     key_hash = key_hash.decode("ASCII")
                 case otherwise:
@@ -291,7 +292,9 @@ class Gearshift:
         """
         return self.get("vault.key_group", required=False) or "default"
     
-    def get_vault_client(self) -> hvac.Client:
+    def get_vault_client(self) -> "hvac.Client":
+        import hvac
+
         L = "Gearshift.get_vault_client"
 
         vault_client = hvac.Client(
@@ -307,5 +310,5 @@ class Gearshift:
         return vault_client
 
 if __name__ == '__main__':
-    context = Gearshift()
+    context = GearshiftContext()
     ## print(context.db)

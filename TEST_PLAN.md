@@ -20,7 +20,7 @@ we will test all the other functionalities without.
 
 ## extended files
 
-We should test adding blocks to AES0 files that are not
+We should test adding blocks to GEAR files that are not
 on our standard list. Some should fail (A-Z), others
 should not
 

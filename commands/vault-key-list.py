@@ -6,7 +6,7 @@
 #   2023-09-30
 #
 
-from gearshift import Gearshift # type: ignore
+from gearshift.context import GearshiftContext
 
 import sys
 import click
@@ -20,7 +20,7 @@ L = "vault-key-list"
 def _(key_group:str=None):
     import hvac
 
-    context = Gearshift.instance()
+    context = GearshiftContext.instance()
     key_root = context.get_vault_key_root()
     key_group = key_group or context.get_vault_key_group()
     vault_client = context.get_vault_client()

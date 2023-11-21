@@ -5,7 +5,7 @@ Encryption at Rest Tools
 ## Technical Details
 ### File Format
 
-* First 4 bytes: b"AES0"
+* First 4 bytes: b"GEAR"
 * N "Blocks"
 
 Each block is:
@@ -55,25 +55,25 @@ You can find it in `./scripts`
 Encrypt to stdin to stdout:
 
 ```
-gearshift encrypt < file.txt > file.txt.aes0
+scripts/gearshift encrypt < file.txt > file.txt.gear
 ```
 
 Encrypt a file to a file:
 
 ```
-gearshift encrypt file.txt --output file.txt.aes0
+scripts/gearshift encrypt file.txt --output file.txt.gear
 ```
 
 Decrypt to stdin to stdout:
 
 ```
-gearshift decrypt < file.txt.aes0 > file.txt
+scripts/gearshift decrypt < file.txt.gear > file.txt
 ```
 
 Decrypt a file to a file:
 
 ```
-gearshift decrypt file.txt.aes0 --output file.txt
+scripts/gearshift decrypt file.txt.gear --output file.txt
 ```
 
 ### Vault Commands

@@ -10,7 +10,7 @@ import sys
 
 import click
 
-from gearshift import Gearshift # type: ignore
+from gearshift.context import GearshiftContext
 
 L = "encrypt"
 
@@ -18,7 +18,7 @@ L = "encrypt"
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="crypttext file")
 def _(input:str, output:str):
-    context = Gearshift.instance()
+    context = GearshiftContext.instance()
 
     if input == "-":
         data = sys.stdin.buffer.read()

@@ -7,6 +7,7 @@
 #
 
 from gearshift import Gearshift, helpers  # type: ignore
+from gearshift.context import GearshiftContext
 
 import base64
 import click
@@ -20,7 +21,7 @@ L = "vault-key-create"
 def _(key_group:str=None):
     from cryptography.fernet import Fernet
 
-    context = Gearshift.instance()
+    context = GearshiftContext.instance()
     key_root = context.get_vault_key_root()
     key_group = key_group or context.get_vault_key_group()
     vault_client = context.get_vault_client()

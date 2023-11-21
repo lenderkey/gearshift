@@ -1,2 +1,2 @@
-from .Gearshift import Gearshift
-from .io import AES0File, open
+from .context import GearshiftContext
+from .io import Gearshift, open

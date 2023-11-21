@@ -11,7 +11,7 @@ import io
 
 import click
 
-from gearshift import Gearshift # type: ignore
+from gearshift.context import GearshiftContext
 
 L = "decrypt"
 
@@ -21,14 +21,14 @@ import logging as logger
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="plaintext file")
 def _(input:str, output:str):
-    from gearshift import AES0File
+    from gearshift import Gearshift
 
-    context = Gearshift.instance()
+    context = GearshiftContext.instance()
 
     if input == "-":
         plaintext = context.aes_decrypt_to_bytes(sys.stdin.buffer)
     else:
-        with AES0File(input, "rb") as fin:
+        with Gearshift(input, "rb") as fin:
             plaintext = fin.read()
 
     if output == "-":

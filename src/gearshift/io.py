@@ -2,16 +2,16 @@ import builtins
 import os
 import random
 
-class AES0File:
+class Gearshift:
     def __init__(self, filename, mode="r", encoding=None, context=None, **ad):
-        from .Gearshift import Gearshift
+        from .context import GearshiftContext
 
         self.filename = filename
-        self.filename_aes0 = filename + ".aes0"  
+        self.filename_gear = filename + ".gear"  
         self.mode = mode
         self.encoding = encoding
         self.fio = None
-        self.context = context or Gearshift.instance()
+        self.context = context or GearshiftContext.instance()
         self.key_hash = None
 
         self.filename_tmp = None
@@ -19,7 +19,7 @@ class AES0File:
     def __enter__(self):
         match self.mode:
             case 'w' | 'wb':
-                dir, base = os.path.split(self.filename_aes0)
+                dir, base = os.path.split(self.filename_gear)
                 base = f".{base}.{random.randint(0, 999999):06d}"
                 self.filename_tmp = os.path.join(dir, base)
                 self.fio = builtins.open(self.filename_tmp, "wb")
@@ -28,9 +28,9 @@ class AES0File:
             
             case 'r' | 'rb':
                 try:
-                    self.fio = builtins.open(self.filename_aes0, "rb")
+                    self.fio = builtins.open(self.filename_gear, "rb")
                 except FileNotFoundError:
-                    self.filename_aes0 = None
+                    self.filename_gear = None
                     self.fio = builtins.open(self.filename, self.mode)
 
                 return self
@@ -46,7 +46,7 @@ class AES0File:
             if exc_type:
                 os.remove(self.filename_tmp)
             else:
-                os.rename(self.filename_tmp, self.filename_aes0)
+                os.rename(self.filename_tmp, self.filename_gear)
 
                 try: os.remove(self.filename)
                 except IOError: pass
@@ -62,7 +62,7 @@ class AES0File:
         self.context.aes_encrypt_to_stream(data, fout=self.fio, key_hash=self.key_hash)
 
     def read(self):
-        if not self.filename_aes0:
+        if not self.filename_gear:
             return self.fio.read()
         
         data = self.context.aes_decrypt_to_bytes(fin=self.fio)
@@ -73,5 +73,5 @@ class AES0File:
         return data
 
 def open(filename, mode="r", *av, **ad):
-    return AES0File(filename=filename, mode=mode, *av, **ad)
+    return Gearshift(filename=filename, mode=mode, *av, **ad)
 
