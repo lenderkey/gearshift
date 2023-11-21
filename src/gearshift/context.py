@@ -179,6 +179,7 @@ class GearshiftContext:
                     raise KeyError(f"{L}: key not found: {key_path}")
 
                 data = read_response.get('data', {})
+                print("HERE:XXX", data)
                 data = data.get('data', {})
                 key_encoded = data.get('key')
                 key = base64.urlsafe_b64decode(key_encoded)
@@ -205,6 +206,10 @@ class GearshiftContext:
                         return base64.urlsafe_b64decode(key), key_hash
                         
                 raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+            
+            case _:
+                raise ValueError(f"{L}: unknown key_system: {self.get('security.key_system')}")
+
 
     def aes_encrypt_to_stream(self, data:bytes, fout:io.BytesIO, key_hash:str=None) -> None:
         from .helpers import aes_encrypt
