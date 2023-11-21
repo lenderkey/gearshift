@@ -30,7 +30,7 @@ class GearshiftContext:
     BLOCK_ZLIB = b"Z"
     BLOCK_END = b"\0"
 
-    def __init__(self, cfg_file=None):
+    def __init__(self, cfg_file=None, cfg=None):
         L = "Gearshift.__init__"
 
         self._connection = None
@@ -39,12 +39,15 @@ class GearshiftContext:
         self.cfg_folder = os.path.abspath(os.path.dirname(self.cfg_file))
         self.cfg = {}
 
-        try:
-            with open(self.cfg_file) as fin:
-                self.cfg = yaml.safe_load(fin) or self.cfg
-        except IOError:
-            logger.fatal(f"{L}: {self.cfg_file=} not found")
-            sys.exit(1)
+        if cfg is not None:
+            self.cfg = cfg
+        else:
+            try:
+                with open(self.cfg_file) as fin:
+                    self.cfg = yaml.safe_load(fin) or self.cfg
+            except IOError:
+                logger.fatal(f"{L}: {self.cfg_file=} not found")
+                sys.exit(1)
 
     @classmethod
     def instance(self, **ad) -> "GearshiftContext":
