@@ -17,7 +17,7 @@ L = "decrypt"
 
 import logging as logger
 
-@cli.command("decrypt", help="decrypt a file") # type: ignore
+@cli.command(L, help="decrypt a file") # type: ignore
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="plaintext file")
 def _(input:str, output:str):

@@ -14,7 +14,7 @@ from gearshift.context import GearshiftContext
 
 L = "encrypt"
 
-@cli.command("encrypt", help="encrypt a file") # type: ignore
+@cli.command(L, help="encrypt a file") # type: ignore
 @click.argument("input", default="-")
 @click.option("--output", default="-", help="crypttext file")
 def _(input:str, output:str):

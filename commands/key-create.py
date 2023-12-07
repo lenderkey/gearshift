@@ -14,7 +14,7 @@ import logging as logger
 
 L = "key-create"
 
-@cli.command("key-create", help="server: generate a key and key_hash") # type: ignore
+@cli.command(L, help="server: generate a key and key_hash") # type: ignore
 @click.option("--output", help="output file", default="~/.gearshift/keys/temporary.key")
 @click.option("--force/--no-force", is_flag=True, default=False, help="overwrite existing keyfile")
 def _(output:str, force:bool):
