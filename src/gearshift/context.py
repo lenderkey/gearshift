@@ -182,7 +182,6 @@ class GearshiftContext:
                     raise KeyError(f"{L}: key not found: {key_path}")
 
                 data = read_response.get('data', {})
-                print("HERE:XXX", data)
                 data = data.get('data', {})
                 key_encoded = data.get('key')
                 key = base64.urlsafe_b64decode(key_encoded)
@@ -209,6 +208,39 @@ class GearshiftContext:
                         return base64.urlsafe_b64decode(key), key_hash
                         
                 raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
+            
+            case "aws":
+                ## note you have to do `pip install boto3`
+                import json
+                import boto3
+                from botocore.exceptions import ClientError
+
+                secret_name = self.get("security.secret_name", required=True)
+                region_name = self.get("security.region_name", required=False, default="ca-central-1")
+
+                # Create a Secrets Manager client
+                session = boto3.session.Session()
+                client = session.client(
+                    service_name='secretsmanager',
+                    region_name=region_name
+                )
+
+                try:
+                    get_secret_value_response = client.get_secret_value(
+                        SecretId=secret_name
+                    )
+                except ClientError as x:
+                    logger.error(f"{L}: {x=}")
+                    raise
+
+                secrets = get_secret_value_response['SecretString']
+                secretd = json.loads(secrets)
+
+                if key_hash not in secretd:
+                    raise KeyError(f"{L}: key not found: {key_hash}")
+                
+                key = base64.urlsafe_b64decode(secretd[key_hash])
+                return key, key_hash
             
             case _:
                 raise ValueError(f"{L}: unknown key_system: {self.get('security.key_system')}")
