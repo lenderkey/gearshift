@@ -28,16 +28,19 @@ def cli(ctx, debug, cfg, set_):
     else:
         logging.basicConfig(level=logging.INFO)
 
-    if cfg and cfg.find("/") == -1:
-        if cfg.find(".") == -1:
-            cfg += ".yaml"
+    cfg_file = None
+    if cfg:
+        cfg_file = cfg
+        if cfg_file.find("/") == -1:
+            if cfg_file.find(".") == -1:
+                ccfg_filefg += ".yaml"
 
-        cfg = f"~/.gearshift/{cfg}"
+            cfg_file = f"~/.gearshift/{cfg}"
 
-    if cfg and cfg.find("~") == 0:
-        cfg = os.path.expanduser(cfg)
+        if cfg_file.find("~") == 0:
+            cfg_file = os.path.expanduser(cfg_file)
 
-    context = GearshiftContext.instance(cfg_file=cfg)
+    context = GearshiftContext.instance(cfg_file=cfg_file, cfg_optional=not cfg)
 
     updates = {}
     for kv in set_:
