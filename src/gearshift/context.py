@@ -21,6 +21,9 @@ hvac = ForwardRef("hvac")
 
 L = "GearshiftContext"
 
+class GearshiftNoContextError(ValueError):
+    pass
+
 class GearshiftContext:
     _instance = None
 
@@ -30,7 +33,7 @@ class GearshiftContext:
     BLOCK_ZLIB = b"Z"
     BLOCK_END = b"\0"
 
-    def __init__(self, cfg_file=None, cfg=None):
+    def __init__(self, cfg_file:str=None, cfg:dict=None, cfg_optional:bool=False):
         L = "Gearshift.__init__"
 
         self._connection = None
@@ -46,8 +49,11 @@ class GearshiftContext:
                 with open(self.cfg_file) as fin:
                     self.cfg = yaml.safe_load(fin) or self.cfg
             except IOError:
-                logger.fatal(f"{L}: {self.cfg_file=} not found")
-                sys.exit(1)
+                if cfg_optional:
+                    self.cfg = {}
+                else:
+                    logger.fatal(f"{L}: {self.cfg_file=} not found")
+                    raise GearshiftNoContextError(f"{L}: {self.cfg_file=} not found")
 
     @classmethod
     def instance(self, **ad) -> "GearshiftContext":

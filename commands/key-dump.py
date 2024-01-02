@@ -15,13 +15,12 @@ import json
 from gearshift.context import GearshiftContext
 from gearshift.helpers import sha256_data
 
-
 L = "key-dump"
 
 @cli.command(L, help="dump keys as JSON -- good for AWS secrets") # type: ignore
 @click.argument("keyfile")
 def _(keyfile:str):
-    context = GearshiftContext.instance()
+    context = GearshiftContext.instance(cfg_optional=True)
 
     d = {}
     with open(keyfile, "rb") as fin:
