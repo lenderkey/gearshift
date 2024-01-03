@@ -257,7 +257,7 @@ class GearshiftContext:
 
                 ## this is a hack for now 🧐
                 if len(key) != 32:
-                    key = base64.urlsafe_b64decode(secretd[key_hash])
+                    key = base64.urlsafe_b64decode(key)
 
                 return key, key_hash
             
