@@ -58,6 +58,28 @@ def generate_tv_hash():
     hasher = hashlib.sha256()
     hasher.update(TV_KEY)
     tv_hash = base64.urlsafe_b64encode(hasher.digest()).decode().rstrip("=")
-    print("test_context._generate_tv_hash:")
+    print("_test_gearshift.generate_tv_hash:")
     print(f"{tv_hash=}")
-    # copied into tv_hash above
+    # copied into key_hash above
+
+UNENCRYPTED_TEXT = "Hello, world!"
+encrypted_text_filename = os.path.join(os.path.dirname(__file__), "data", "text_file.gear")
+
+def generate_encrypted_text_file():
+    # used (once) to generate tests/data/text_file.gear
+    from unittest.mock import patch
+    import gearshift
+    
+    set_up_key_file()
+    context = gearshift.GearshiftContext.instance(cfg=cfg)
+
+    with patch("base64.urlsafe_b64decode", lambda key: key):
+    # base64.urlsafe_b64decode() used by context.server_key()
+    # patched because TV_KEY cannot be base64 encoded
+        with patch("os.urandom", return_value=TV_IV):
+        # os.urandom() used by helpers.aes_encrypt()
+        # patched because TV_IV is specified
+            with gearshift.io.open(encrypted_text_filename, mode="w", context=context) as fout:
+                fout.write(UNENCRYPTED_TEXT)
+    
+    tear_down_key_file()

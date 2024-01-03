@@ -16,6 +16,7 @@ from ._test_gearshift import (
     encrypted_file_aes_tag_block,
     encrypted_file_end_block,
     encrypted_file_contents,
+    UNENCRYPTED_TEXT, encrypted_text_filename,
 )
 
 unencrypted_filename = os.path.join(os.path.dirname(__file__), "data", "file")
@@ -41,7 +42,6 @@ class TestIO(unittest.TestCase):
             os.remove(encrypted_filename)
 
     def test_read_unencrypted_text_file(self):
-        UNENCRYPTED_TEXT = "Hello, world!"
         with builtins.open(unencrypted_filename, "w", encoding="utf-8") as fout:
             fout.write(UNENCRYPTED_TEXT)
 
@@ -51,23 +51,25 @@ class TestIO(unittest.TestCase):
         os.remove(unencrypted_filename)
 
     def test_read_unencrypted_binary_file(self):
-        UNENCRYPTED_BYTES = TV_PT
         with builtins.open(unencrypted_filename, "wb") as fout:
-            fout.write(UNENCRYPTED_BYTES)
+            fout.write(TV_PT)
 
         with gearshift.io.open(unencrypted_filename, mode="rb", context=self.context) as fin:
-            self.assertEqual(fin.read(), UNENCRYPTED_BYTES)
+            self.assertEqual(fin.read(), TV_PT)
 
         os.remove(unencrypted_filename)
 
-    @unittest.skip
     def test_read_encrypted_text_file(self):
-        # NEED TEST VECTOR WITH TEXT PLAINTEXT
-        pass
+        # see generate_encrypted_text_file() in tests/_test_gearshift.py
+        with gearshift.io.open(encrypted_text_filename, mode="r", context=self.context) as fin:
+            with patch("base64.urlsafe_b64decode", lambda key: key):
+            # base64.urlsafe_b64decode() used by context.server_key()
+            # patched because TV_KEY cannot be base64 encoded # see tests/_test_gearshift.py
+                self.assertEqual(fin.read(), UNENCRYPTED_TEXT)
 
     @unittest.skip
     def test_read_encrypted_text_file_with_encoding(self):
-        # NEED TEST VECTOR WITH TEXT PLAINTEXT
+        # TODO
         pass
 
     def test_read_encrypted_binary_file(self):
@@ -222,14 +224,28 @@ class TestIO(unittest.TestCase):
             
             os.remove(encrypted_filename)
 
-    @unittest.skip
     def test_write_encrypted_text_file(self):
-        # NEED TEST VECTOR WITH TEXT PLAINTEXT
-        pass
+        # see generate_encrypted_text_file() in tests/_test_gearshift.py
+        with builtins.open(encrypted_text_filename, "rb") as fin:
+            encrypted_text_file_contents = fin.read()
+
+        with patch("base64.urlsafe_b64decode", lambda key: key):
+        # base64.urlsafe_b64decode() used by context.server_key()
+        # patched because TV_KEY cannot be base64 encoded # see tests/_test_gearshift.py
+            with patch("os.urandom", return_value=TV_IV):
+            # os.urandom() used by helpers.aes_encrypt()
+            # patched because TV_IV is specified # see tests/_test_gearshift.py
+                with gearshift.io.open(encrypted_filename, mode="w", context=self.context) as fout:
+                    fout.write(UNENCRYPTED_TEXT)
+
+        with builtins.open(encrypted_filename, "rb") as fin:
+            self.assertEqual(fin.read(), encrypted_text_file_contents)
+
+        os.remove(encrypted_filename)
 
     @unittest.skip
     def test_write_encrypted_text_file_with_encoding(self):
-        # NEED TEST VECTOR WITH TEXT PLAINTEXT
+        # TODO
         pass
 
     def test_write_encrypted_binary_file(self):
