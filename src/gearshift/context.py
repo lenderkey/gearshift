@@ -254,6 +254,11 @@ class GearshiftContext:
                     raise KeyError(f"{L}: key not found: {key_hash}")
                 
                 key = base64.urlsafe_b64decode(secretd[key_hash])
+
+                ## this is a hack for now 🧐
+                if len(key) != 32:
+                    key = base64.urlsafe_b64decode(secretd[key_hash])
+
                 return key, key_hash
             
             case _:
