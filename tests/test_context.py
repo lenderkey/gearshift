@@ -81,11 +81,16 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.cfg_folder, os.path.dirname(cfg_filename))
         self.assertEqual(context.cfg, {})
 
-    def test_init_with_no_cfg_file(self):
+    def test_init_with_no_cfg_file_and_not_cfg_optional(self):
         cfg_filename = os.path.join(os.path.dirname(__file__), "data", "cfg_file.yaml")
 
-        with self.assertRaises(SystemExit):
-            context = gearshift.GearshiftContext(cfg_file=cfg_filename)
+        with self.assertRaises(ValueError): # GearshiftNoContextError(ValueError)
+            context = gearshift.GearshiftContext(cfg_file=cfg_filename) # default cfg_optional=False
+
+    @unittest.skip
+    def test_init_with_no_cfg_file_and_cfg_optional(self):
+        # TODO
+        pass
 
     def test_instance(self):
         context = gearshift.GearshiftContext.instance(cfg=cfg)
