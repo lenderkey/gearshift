@@ -236,7 +236,7 @@ class GearshiftContext:
                         clientd[key] = value
  
                 session = boto3.session.Session()
-                client = session.client(*clientd)
+                client = session.client(**clientd)
 
                 try:
                     secret_name = self.get("security.secret_name", required=True)
