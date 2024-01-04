@@ -170,9 +170,6 @@ class TestIO(unittest.TestCase):
 
         os.remove(encrypted_filename)
 
-    @unittest.expectedFailure
-    # currently fails because `if block_tag in string.ascii_uppercase:`
-    # in context.py raises TypeError (block_tag is bytes, not str)
     def test_read_encrypted_binary_file_with_invalid_block_type(self):
         block_types = map(lambda code_point: chr(code_point).encode(), range(ord("A"), ord("Z") + 1))
         valid_block_types = [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG] # BLOCK_ZLIB not allowed (yet)
@@ -199,9 +196,6 @@ class TestIO(unittest.TestCase):
             
             os.remove(encrypted_filename)
 
-    @unittest.expectedFailure
-    # currently fails because `if block_tag in string.ascii_uppercase:`
-    # in context.py raises TypeError (block_tag is bytes, not str)
     def test_read_encrypted_binary_file_with_optional_block_type(self):
         block_types = map(lambda code_point: chr(code_point).encode(), range(ord("a"), ord("z") + 1))
         for block_type in block_types:
@@ -266,8 +260,8 @@ class TestIO(unittest.TestCase):
     def test_invalid_modes(self):
         valid_filename = os.path.join(os.path.dirname(__file__), "data", "valid_file")
         invalid_modes = [
-            "rt", "r+", "r+t", "r+b",
-            "wt", "w+", "w+t", "w+b",
+            "rt", "r+", "r+t", "r+b", # note "r" (valid) == "rt" (invalid)
+            "wt", "w+", "w+t", "w+b", # note "w" (valid) == "wt" (invalid)
             "x", "xt", "x+", "x+t", "xb", "x+b",
             "a", "at", "a+", "a+t", "ab", "a+b", "foo"]
         
@@ -280,8 +274,8 @@ class TestIO(unittest.TestCase):
     def test_invalid_modes_without_context_manager(self):
         valid_filename = os.path.join(os.path.dirname(__file__), "data", "valid_file")
         invalid_modes = [
-            "rt", "r+", "r+t", "r+b",
-            "wt", "w+", "w+t", "w+b",
+            "rt", "r+", "r+t", "r+b", # note "r" (valid) == "rt" (invalid)
+            "wt", "w+", "w+t", "w+b", # note "w" (valid) == "wt" (invalid)
             "x", "xt", "x+", "x+t", "xb", "x+b",
             "a", "at", "a+", "a+t", "ab", "a+b", "foo"]
         
