@@ -221,6 +221,9 @@ class GearshiftContext:
                 import boto3
                 from botocore.exceptions import ClientError
 
+                if not key_hash:
+                    key_hash = self.server_key_hash()
+
                 clientd = {
                     "service_name": "secretsmanager",
                     "region_name": "ca-central-1",
