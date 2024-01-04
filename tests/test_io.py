@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 import builtins
 import os
+import string
 
 import gearshift
 
@@ -171,9 +172,8 @@ class TestIO(unittest.TestCase):
         os.remove(encrypted_filename)
 
     def test_read_encrypted_binary_file_with_invalid_block_type(self):
-        block_types = map(lambda code_point: chr(code_point).encode(), range(ord("A"), ord("Z") + 1))
         valid_block_types = [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG] # BLOCK_ZLIB not allowed (yet)
-        for block_type in block_types:
+        for block_type in [block_type.encode("ASCII") for block_type in string.ascii_uppercase]:
             if block_type in valid_block_types:
                 continue
             with builtins.open(encrypted_filename, "wb") as fout:
@@ -197,8 +197,7 @@ class TestIO(unittest.TestCase):
             os.remove(encrypted_filename)
 
     def test_read_encrypted_binary_file_with_optional_block_type(self):
-        block_types = map(lambda code_point: chr(code_point).encode(), range(ord("a"), ord("z") + 1))
-        for block_type in block_types:
+        for block_type in [block_type.encode("ASCII") for block_type in string.ascii_lowercase]:
             with builtins.open(encrypted_filename, "wb") as fout:
                 fout.write(
                     encrypted_file_header +
