@@ -62,6 +62,16 @@ def generate_tv_hash():
     print(f"{tv_hash=}")
     # copied into key_hash above
 
+# base64.urlsafe_b64decode() used by context.server_key()
+# patched because TV_KEY cannot be base64 encoded
+def patched_base64_urlsafe_b64decode(s):
+    return s
+
+# os.urandom() used by helpers.aes_encrypt()
+# patched because TV_IV is specified
+def patched_os_urandom(size):
+    return TV_IV
+
 UNENCRYPTED_TEXT = "Hello, world!"
 encrypted_text_filename = os.path.join(os.path.dirname(__file__), "data", "text_file.gear")
 
@@ -73,12 +83,8 @@ def generate_encrypted_text_file():
     set_up_key_file()
     context = gearshift.GearshiftContext.instance(cfg=cfg)
 
-    with patch("base64.urlsafe_b64decode", lambda key: key):
-    # base64.urlsafe_b64decode() used by context.server_key()
-    # patched because TV_KEY cannot be base64 encoded
-        with patch("os.urandom", return_value=TV_IV):
-        # os.urandom() used by helpers.aes_encrypt()
-        # patched because TV_IV is specified
+    with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+        with patch("os.urandom", patched_os_urandom):
             with gearshift.io.open(encrypted_text_filename, mode="w", context=context) as fout:
                 fout.write(UNENCRYPTED_TEXT)
     

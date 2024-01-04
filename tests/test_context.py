@@ -9,10 +9,11 @@ import yaml
 import gearshift
 
 from ._test_gearshift import (
-    TV_IV, TV_PT, key_hash, 
+    TV_PT, key_hash, 
     key_system, key_filename, cfg,
     set_up_key_file, tear_down_key_file,
     encrypted_file_contents,
+    patched_base64_urlsafe_b64decode, patched_os_urandom,
 )
 
 ## Run me with:
@@ -109,12 +110,8 @@ class TestContext(unittest.TestCase):
         context = gearshift.GearshiftContext.instance(cfg=cfg)
         encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "encrypted_file.gear")
         with io.open(encrypted_filename, "wb") as fout:
-            with patch("base64.urlsafe_b64decode", lambda key: key):
-            # base64.urlsafe_b64decode() used by context.server_key()
-            # patched because TV_KEY cannot be base64 encoded # see tests/_test_gearshift.py
-                with patch("os.urandom", return_value=TV_IV):
-                # os.urandom() used by helpers.aes_encrypt()
-                # patched because TV_IV is specified # see tests/_test_gearshift.py
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                with patch("os.urandom", patched_os_urandom):
                     context.aes_encrypt_to_stream(data=TV_PT, fout=fout) # default key_hash=None
 
         with io.open(encrypted_filename, "rb") as fin:
@@ -129,9 +126,7 @@ class TestContext(unittest.TestCase):
             fout.write(encrypted_file_contents)
 
         with io.open(encrypted_filename, "rb") as fin:
-            with patch("base64.urlsafe_b64decode", lambda key: key):
-            # base64.urlsafe_b64decode() used by context.server_key()
-            # patched because TV_KEY cannot be base64 encoded # see tests/_test_gearshift.py
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 self.assertEqual(context.aes_decrypt_to_bytes(fin=fin), TV_PT)
 
         os.remove(encrypted_filename)
