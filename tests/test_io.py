@@ -18,7 +18,8 @@ from ._test_gearshift import (
     encrypted_file_end_block,
     encrypted_file_contents,
     patched_base64_urlsafe_b64decode, patched_os_urandom,
-    UNENCRYPTED_TEXT, encrypted_text_filename,
+    TEXT_PT, encrypted_text_pt_filename,
+    EMPTY_PT, encrypted_empty_pt_filename,
 )
 
 unencrypted_filename = os.path.join(os.path.dirname(__file__), "data", "file")
@@ -45,10 +46,10 @@ class TestIO(unittest.TestCase):
 
     def test_read_unencrypted_text_file(self):
         with builtins.open(unencrypted_filename, "w", encoding="utf-8") as fout:
-            fout.write(UNENCRYPTED_TEXT)
+            fout.write(TEXT_PT)
 
         with gearshift.io.open(unencrypted_filename, mode="r", context=self.context) as fin: # default encoding="utf-8"
-            self.assertEqual(fin.read(), UNENCRYPTED_TEXT)
+            self.assertEqual(fin.read(), TEXT_PT)
 
     def test_read_unencrypted_binary_file(self):
         with builtins.open(unencrypted_filename, "wb") as fout:
@@ -59,9 +60,9 @@ class TestIO(unittest.TestCase):
 
     def test_read_encrypted_text_file(self):
         # see generate_encrypted_text_file() in tests/_test_gearshift.py
-        with gearshift.io.open(encrypted_text_filename, mode="r", context=self.context) as fin:
+        with gearshift.io.open(encrypted_text_pt_filename, mode="r", context=self.context) as fin:
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
-                self.assertEqual(fin.read(), UNENCRYPTED_TEXT)
+                self.assertEqual(fin.read(), TEXT_PT)
 
     @unittest.skip
     def test_read_encrypted_text_file_with_encoding(self):
@@ -75,6 +76,12 @@ class TestIO(unittest.TestCase):
         with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 self.assertEqual(fin.read(), TV_PT)
+
+    def test_read_encrypted_binary_file_with_empty_plaintext(self):
+        # see generate_encrypted_binary_file_with_empty_plaintext() in tests/_test_gearshift.py
+        with gearshift.io.open(encrypted_empty_pt_filename, mode="rb", context=self.context) as fin:
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                self.assertEqual(fin.read(), EMPTY_PT)
 
     def test_read_encrypted_binary_file_with_blocks_out_of_order(self):
         with builtins.open(encrypted_filename, "wb") as fout:
@@ -204,16 +211,16 @@ class TestIO(unittest.TestCase):
             
     def test_write_encrypted_text_file(self):
         # see generate_encrypted_text_file() in tests/_test_gearshift.py
-        with builtins.open(encrypted_text_filename, "rb") as fin:
-            encrypted_text_file_contents = fin.read()
+        with builtins.open(encrypted_text_pt_filename, "rb") as fin:
+            encrypted_text_pt_file_contents = fin.read()
 
         with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
             with patch("os.urandom", patched_os_urandom):
                 with gearshift.io.open(encrypted_filename, mode="w", context=self.context) as fout:
-                    fout.write(UNENCRYPTED_TEXT)
+                    fout.write(TEXT_PT)
 
         with builtins.open(encrypted_filename, "rb") as fin:
-            self.assertEqual(fin.read(), encrypted_text_file_contents)
+            self.assertEqual(fin.read(), encrypted_text_pt_file_contents)
 
     @unittest.skip
     def test_write_encrypted_text_file_with_encoding(self):
@@ -228,6 +235,19 @@ class TestIO(unittest.TestCase):
 
         with builtins.open(encrypted_filename, "rb") as fin:
             self.assertEqual(fin.read(), encrypted_file_contents)
+
+    def test_write_encrypted_binary_file_with_empty_plaintext(self):
+        # see generate_encrypted_binary_file_with_empty_plaintext() in tests/_test_gearshift.py
+        with builtins.open(encrypted_empty_pt_filename, "rb") as fin:
+            encrypted_empty_pt_file_contents = fin.read()
+
+        with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+            with patch("os.urandom", patched_os_urandom):
+                with gearshift.io.open(encrypted_filename, mode="wb", context=self.context) as fout:
+                    fout.write(EMPTY_PT)
+
+        with builtins.open(encrypted_filename, "rb") as fin:
+            self.assertEqual(fin.read(), encrypted_empty_pt_file_contents)
 
     def test_invalid_modes(self):
         valid_filename = os.path.join(os.path.dirname(__file__), "data", "valid_file")

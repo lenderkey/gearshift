@@ -4420,7 +4420,7 @@ Tag = 117cf20e
 [AADlen = 0]
 [Taglen = 128]
 
-Count = 0 # TEST_VECTOR # test_aes_encrypt
+Count = 0 # TEST_VECTOR # test_helpers_aes_encrypt
 Key = 31bdadd96698c204aa9ce1448ea94ae1fb4a9a0b3c9d773b51bb1822666b8f22
 IV = 0d18e06c7c725ac9e362e1ce
 PT = 2db5168e932556f8089a0622981d017d
