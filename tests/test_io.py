@@ -50,16 +50,12 @@ class TestIO(unittest.TestCase):
         with gearshift.io.open(unencrypted_filename, mode="r", context=self.context) as fin: # default encoding="utf-8"
             self.assertEqual(fin.read(), UNENCRYPTED_TEXT)
 
-        os.remove(unencrypted_filename)
-
     def test_read_unencrypted_binary_file(self):
         with builtins.open(unencrypted_filename, "wb") as fout:
             fout.write(TV_PT)
 
         with gearshift.io.open(unencrypted_filename, mode="rb", context=self.context) as fin:
             self.assertEqual(fin.read(), TV_PT)
-
-        os.remove(unencrypted_filename)
 
     def test_read_encrypted_text_file(self):
         # see generate_encrypted_text_file() in tests/_test_gearshift.py
@@ -80,8 +76,6 @@ class TestIO(unittest.TestCase):
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 self.assertEqual(fin.read(), TV_PT)
 
-        os.remove(encrypted_filename)
-
     def test_read_encrypted_binary_file_with_blocks_out_of_order(self):
         with builtins.open(encrypted_filename, "wb") as fout:
             fout.write(
@@ -97,8 +91,6 @@ class TestIO(unittest.TestCase):
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 self.assertEqual(fin.read(), TV_PT)
 
-        os.remove(encrypted_filename)
-
     def test_read_encrypted_binary_file_with_header_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
             fout.write(
@@ -113,8 +105,6 @@ class TestIO(unittest.TestCase):
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 with self.assertRaises(AssertionError):
                     fin.read()
-
-        os.remove(encrypted_filename)
 
     def test_read_encrypted_binary_file_with_block_missing(self):
         blocks = [
@@ -137,8 +127,6 @@ class TestIO(unittest.TestCase):
                     with self.assertRaises(AssertionError):
                         fin.read()
 
-            os.remove(encrypted_filename)
-
     @unittest.expectedFailure
     def test_read_encrypted_binary_file_with_end_block_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
@@ -155,8 +143,6 @@ class TestIO(unittest.TestCase):
                 with self.assertRaises(UnicodeDecodeError):
                 # interprets first byte of TV_CT as block type
                     fin.read()
-
-        os.remove(encrypted_filename)
 
     def test_read_encrypted_binary_file_with_invalid_letter_block_type(self):
         valid_uppercase_letter_block_types = [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG] # BLOCK_ZLIB not allowed (yet)
@@ -179,8 +165,6 @@ class TestIO(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         fin.read()
             
-            os.remove(encrypted_filename)
-
     def test_read_encrypted_binary_file_with_optional_letter_block_type(self):
         for block_type in [letter.encode("ASCII") for letter in string.ascii_lowercase]:
             with builtins.open(encrypted_filename, "wb") as fout:
@@ -198,8 +182,6 @@ class TestIO(unittest.TestCase):
                 with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                     self.assertEqual(fin.read(), TV_PT)
             
-            os.remove(encrypted_filename)
-
     def test_read_encrypted_binary_file_with_non_letter_block_type(self):
         for block_type in [bytes([code]) for code in range(256) if code not in string.ascii_letters.encode("ASCII")]:
             if block_type == BLOCK_END:
@@ -220,8 +202,6 @@ class TestIO(unittest.TestCase):
                     with self.assertRaises(ValueError):
                         fin.read()
             
-            os.remove(encrypted_filename)
-
     def test_write_encrypted_text_file(self):
         # see generate_encrypted_text_file() in tests/_test_gearshift.py
         with builtins.open(encrypted_text_filename, "rb") as fin:
@@ -234,8 +214,6 @@ class TestIO(unittest.TestCase):
 
         with builtins.open(encrypted_filename, "rb") as fin:
             self.assertEqual(fin.read(), encrypted_text_file_contents)
-
-        os.remove(encrypted_filename)
 
     @unittest.skip
     def test_write_encrypted_text_file_with_encoding(self):
@@ -250,8 +228,6 @@ class TestIO(unittest.TestCase):
 
         with builtins.open(encrypted_filename, "rb") as fin:
             self.assertEqual(fin.read(), encrypted_file_contents)
-
-        os.remove(encrypted_filename)
 
     def test_invalid_modes(self):
         valid_filename = os.path.join(os.path.dirname(__file__), "data", "valid_file")
