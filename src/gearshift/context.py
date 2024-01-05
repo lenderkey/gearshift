@@ -308,9 +308,11 @@ class GearshiftContext:
                 case GearshiftContext.BLOCK_KEY_HASH:
                     key_hash = fin.read(int.from_bytes(block_length, "big"))
                     key_hash = key_hash.decode("ASCII")
-                case otherwise:
+                case _:
                     if block_tag in string.ascii_uppercase.encode("ASCII"):
                         raise ValueError(f"{L}: unknown (required) block tag: {block_tag}")
+                    if block_tag not in string.ascii_lowercase.encode("ASCII"):
+                        raise ValueError(f"{L}: unknown (non-letter) block tag: {block_tag}")
                     
                     logger.info(f"{L}: unknown (optional) block tag: {block_tag}")
 

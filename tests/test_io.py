@@ -10,7 +10,7 @@ import gearshift
 from ._test_gearshift import (
     TV_PT, TV_CT, cfg,
     set_up_key_file, tear_down_key_file,
-    BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG,
+    BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG, BLOCK_END,
     encrypted_file_header,
     encrypted_file_key_hash_block,
     encrypted_file_aes_iv_block,
@@ -140,8 +140,6 @@ class TestIO(unittest.TestCase):
             os.remove(encrypted_filename)
 
     @unittest.expectedFailure
-    # currently fails because `if block_tag in string.ascii_uppercase:`
-    # in context.py raises TypeError (block_tag is bytes, not str)
     def test_read_encrypted_binary_file_with_end_block_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
             fout.write(
@@ -160,10 +158,10 @@ class TestIO(unittest.TestCase):
 
         os.remove(encrypted_filename)
 
-    def test_read_encrypted_binary_file_with_invalid_block_type(self):
-        valid_block_types = [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG] # BLOCK_ZLIB not allowed (yet)
-        for block_type in [block_type.encode("ASCII") for block_type in string.ascii_uppercase]:
-            if block_type in valid_block_types:
+    def test_read_encrypted_binary_file_with_invalid_letter_block_type(self):
+        valid_uppercase_letter_block_types = [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG] # BLOCK_ZLIB not allowed (yet)
+        for block_type in [letter.encode("ASCII") for letter in string.ascii_uppercase]:
+            if block_type in valid_uppercase_letter_block_types:
                 continue
             with builtins.open(encrypted_filename, "wb") as fout:
                 fout.write(
@@ -183,8 +181,8 @@ class TestIO(unittest.TestCase):
             
             os.remove(encrypted_filename)
 
-    def test_read_encrypted_binary_file_with_optional_block_type(self):
-        for block_type in [block_type.encode("ASCII") for block_type in string.ascii_lowercase]:
+    def test_read_encrypted_binary_file_with_optional_letter_block_type(self):
+        for block_type in [letter.encode("ASCII") for letter in string.ascii_lowercase]:
             with builtins.open(encrypted_filename, "wb") as fout:
                 fout.write(
                     encrypted_file_header +
@@ -199,6 +197,28 @@ class TestIO(unittest.TestCase):
             with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
                 with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                     self.assertEqual(fin.read(), TV_PT)
+            
+            os.remove(encrypted_filename)
+
+    def test_read_encrypted_binary_file_with_non_letter_block_type(self):
+        for block_type in [bytes([code]) for code in range(256) if code not in string.ascii_letters.encode("ASCII")]:
+            if block_type == BLOCK_END:
+                continue
+            with builtins.open(encrypted_filename, "wb") as fout:
+                fout.write(
+                    encrypted_file_header +
+                    encrypted_file_key_hash_block +
+                    encrypted_file_aes_iv_block +
+                    encrypted_file_aes_tag_block +
+                    block_type + int(0).to_bytes(1, "big") +
+                    encrypted_file_end_block +
+                    TV_CT
+                )
+
+            with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+                with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                    with self.assertRaises(ValueError):
+                        fin.read()
             
             os.remove(encrypted_filename)
 
