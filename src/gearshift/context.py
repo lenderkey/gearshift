@@ -221,17 +221,28 @@ class GearshiftContext:
                 import boto3
                 from botocore.exceptions import ClientError
 
-                secret_name = self.get("security.secret_name", required=True)
-                region_name = self.get("security.region_name", required=False, default="ca-central-1")
+                if not key_hash:
+                    key_hash = self.server_key_hash()
 
-                # Create a Secrets Manager client
+                clientd = {
+                    "service_name": "secretsmanager",
+                    "region_name": "ca-central-1",
+                }
+                for key in [ 
+                    "aws_access_key_id", 
+                    "aws_secret_access_key", 
+                    "region_name", 
+                    "profile_name" 
+                ]:
+                    value = self.get(f"security.{key}", required=False)
+                    if value:
+                        clientd[key] = value
+ 
                 session = boto3.session.Session()
-                client = session.client(
-                    service_name='secretsmanager',
-                    region_name=region_name
-                )
+                client = session.client(**clientd)
 
                 try:
+                    secret_name = self.get("security.secret_name", required=True)
                     get_secret_value_response = client.get_secret_value(
                         SecretId=secret_name
                     )
@@ -246,6 +257,11 @@ class GearshiftContext:
                     raise KeyError(f"{L}: key not found: {key_hash}")
                 
                 key = base64.urlsafe_b64decode(secretd[key_hash])
+
+                ## this is a hack for now 🧐
+                if len(key) != 32:
+                    key = base64.urlsafe_b64decode(key)
+
                 return key, key_hash
             
             case _:
