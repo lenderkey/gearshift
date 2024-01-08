@@ -293,10 +293,11 @@ class GearshiftContext:
         stop = False
         while not stop:
             block_tag = fin.read(1)
-            if block_tag is None:
-                break
-
-            block_length = fin.read(1) or 0
+            if not block_tag:
+                raise ValueError(f"{L}: no end block")
+            block_length = fin.read(1)
+            if not block_length:
+                raise ValueError(f"{L}: block missing length")
 
             match block_tag:
                 case GearshiftContext.BLOCK_END:

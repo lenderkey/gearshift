@@ -134,7 +134,6 @@ class TestIO(unittest.TestCase):
                     with self.assertRaises(AssertionError):
                         fin.read()
 
-    @unittest.expectedFailure
     def test_read_encrypted_binary_file_with_end_block_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
             fout.write(
@@ -147,8 +146,34 @@ class TestIO(unittest.TestCase):
 
         with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
-                with self.assertRaises(UnicodeDecodeError):
+                with self.assertRaises(ValueError):
                 # interprets first byte of TV_CT as block type
+                    fin.read()
+
+    def test_read_encrypted_binary_file_with_empty_plaintext_with_end_block_missing(self):
+        # see generate_encrypted_binary_file_with_empty_plaintext() in tests/_test_gearshift.py
+        with builtins.open(encrypted_empty_pt_filename, "rb") as fin:
+            encrypted_empty_pt_file_contents = fin.read()
+
+        with builtins.open(encrypted_filename, "wb") as fout:
+            fout.write(encrypted_empty_pt_file_contents[:-2])
+
+        with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                with self.assertRaises(ValueError):
+                    fin.read()
+
+    def test_read_encrypted_binary_file_with_empty_plaintext_with_end_block_length_missing(self):
+        # see generate_encrypted_binary_file_with_empty_plaintext() in tests/_test_gearshift.py
+        with builtins.open(encrypted_empty_pt_filename, "rb") as fin:
+            encrypted_empty_pt_file_contents = fin.read()
+
+        with builtins.open(encrypted_filename, "wb") as fout:
+            fout.write(encrypted_empty_pt_file_contents[:-1])
+
+        with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                with self.assertRaises(ValueError):
                     fin.read()
 
     def test_read_encrypted_binary_file_with_invalid_letter_block_type(self):
