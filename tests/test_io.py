@@ -1,3 +1,6 @@
+## Run me with:
+## python -m unittest tests/test_io.py
+
 import unittest
 from unittest.mock import patch
 
@@ -8,8 +11,7 @@ import string
 import gearshift
 
 from ._test_gearshift import (
-    TV_PT, TV_CT, cfg,
-    set_up_key_file, tear_down_key_file,
+    TV_KEY, TV_PT, TV_CT, key_hash,
     BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG, BLOCK_END,
     encrypted_file_header,
     encrypted_file_key_hash_block,
@@ -22,21 +24,29 @@ from ._test_gearshift import (
     EMPTY_PT, encrypted_empty_pt_filename,
 )
 
-unencrypted_filename = os.path.join(os.path.dirname(__file__), "data", "file")
-encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "file.gear")
+key_system = "fs"
+key_filename = os.path.join(os.path.dirname(__file__), "data", "test_io_key_file.key")
+cfg = {
+    "security": {
+        "key_system": key_system,
+        "key_file": key_filename,
+        "key_hash": key_hash,
+    },
+}
 
-## Run me with:
-## python -m unittest tests/*.py
+unencrypted_filename = os.path.join(os.path.dirname(__file__), "data", "test_io_file")
+encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "test_io_file.gear")
 
 class TestIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        set_up_key_file()
+        with builtins.open(key_filename, "wb") as fout:
+            fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
         cls.context = gearshift.GearshiftContext.instance(cfg=cfg)
 
     @classmethod
     def tearDownClass(cls):
-        tear_down_key_file()
+        os.remove(key_filename)
 
     def tearDown(self):
         if os.path.exists(unencrypted_filename):
@@ -97,6 +107,23 @@ class TestIO(unittest.TestCase):
         with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                 self.assertEqual(fin.read(), TV_PT)
+
+    def test_read_encrypted_binary_file_with_optional_letter_block_type(self):
+        for block_type in [letter.encode("ASCII") for letter in string.ascii_lowercase]:
+            with builtins.open(encrypted_filename, "wb") as fout:
+                fout.write(
+                    encrypted_file_header +
+                    encrypted_file_key_hash_block +
+                    encrypted_file_aes_iv_block +
+                    encrypted_file_aes_tag_block +
+                    block_type + int(0).to_bytes(1, "big") +
+                    encrypted_file_end_block +
+                    TV_CT
+                )
+
+            with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+                with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                    self.assertEqual(fin.read(), TV_PT)
 
     def test_read_encrypted_binary_file_with_header_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
@@ -196,23 +223,6 @@ class TestIO(unittest.TestCase):
                 with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                     with self.assertRaises(ValueError):
                         fin.read()
-            
-    def test_read_encrypted_binary_file_with_optional_letter_block_type(self):
-        for block_type in [letter.encode("ASCII") for letter in string.ascii_lowercase]:
-            with builtins.open(encrypted_filename, "wb") as fout:
-                fout.write(
-                    encrypted_file_header +
-                    encrypted_file_key_hash_block +
-                    encrypted_file_aes_iv_block +
-                    encrypted_file_aes_tag_block +
-                    block_type + int(0).to_bytes(1, "big") +
-                    encrypted_file_end_block +
-                    TV_CT
-                )
-
-            with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
-                with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
-                    self.assertEqual(fin.read(), TV_PT)
             
     def test_read_encrypted_binary_file_with_non_letter_block_type(self):
         for block_type in [bytes([code]) for code in range(256) if code not in string.ascii_letters.encode("ASCII")]:

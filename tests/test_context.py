@@ -1,3 +1,6 @@
+## Run me with:
+## python -m unittest tests/test_context.py
+
 import unittest
 from unittest.mock import patch
 
@@ -9,24 +12,30 @@ import yaml
 import gearshift
 
 from ._test_gearshift import (
-    TV_PT, key_hash, 
-    key_system, key_filename, cfg,
-    set_up_key_file, tear_down_key_file,
+    TV_KEY, TV_PT, key_hash, 
     encrypted_file_contents,
     patched_base64_urlsafe_b64decode, patched_os_urandom,
 )
 
-## Run me with:
-## python -m unittest tests/*.py
+key_system = "fs"
+key_filename = os.path.join(os.path.dirname(__file__), "data", "test_context_key_file.key")
+cfg = {
+    "security": {
+        "key_system": key_system,
+        "key_file": key_filename,
+        "key_hash": key_hash,
+    },
+}
 
 class TestContext(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        set_up_key_file()
+        with io.open(key_filename, "wb") as fout:
+            fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
 
     @classmethod
     def tearDownClass(cls):
-        tear_down_key_file()
+        os.remove(key_filename)
 
     def test_init_with_default_cfg_file(self):
         default_cfg_filename = "~/.gearshift/gearshift.yaml"

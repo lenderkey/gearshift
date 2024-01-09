@@ -1,6 +1,3 @@
-import io
-import os
-
 # GCM test vectors: https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/mac/gcmtestvectors.zip
 # see "TEST_VECTOR" in tests/data/gcmEncryptExtIV256.rsp
 TV_KEY = bytes.fromhex("31bdadd96698c204aa9ce1448ea94ae1fb4a9a0b3c9d773b51bb1822666b8f22") # 256 bits
@@ -11,25 +8,6 @@ TV_TAG = bytes.fromhex("d636ac1bbedd5cc3ee727dc2ab4a9489") # 128 bits # len(TV_T
 
 key_hash = "qaj4gLCP7u86X2-PUWIAj45yUWvtCz5vfHPRDoc82Pc" # 256 bits # see generate_tv_key_hash() below
 key_hash_bytes = key_hash.encode("ASCII") # len(key_hash_bytes) == 43
-
-key_system = "fs"
-key_filename = os.path.join(os.path.dirname(__file__), "data", "key_file.key")
-cfg = {
-    "security": {
-        "key_system": key_system,
-        "key_file": key_filename,
-        "key_hash": key_hash,
-    },
-}
-
-def set_up_key_file(): # TV_KEY cannot be base64 encoded
-    with io.open(key_filename, "wb") as fout:
-        fout.write(TV_KEY)
-    # TV_KEY == b'1\xbd\xad\xd9f\x98\xc2\x04\xaa\x9c\xe1D\x8e\xa9J\xe1\xfbJ\x9a\x0b<\x9dw;Q\xbb\x18"fk\x8f"'
-    # base64.urlsafe_b64encode(TV_KEY).decode() == 'Mb2t2WaYwgSqnOFEjqlK4ftKmgs8nXc7UbsYImZrjyI='
-
-def tear_down_key_file():
-    os.remove(key_filename)
 
 # copied from context.py
 BLOCK_KEY_HASH = b"H"
@@ -72,6 +50,19 @@ def patched_base64_urlsafe_b64decode(s):
 def patched_os_urandom(size):
     return TV_IV
 
+import io
+import os
+    
+key_system = "fs"
+key_filename = os.path.join(os.path.dirname(__file__), "data", "key_file.key")
+cfg = {
+    "security": {
+        "key_system": key_system,
+        "key_file": key_filename,
+        "key_hash": key_hash,
+    },
+}
+
 TEXT_PT = "Hello, world!"
 encrypted_text_pt_filename = os.path.join(os.path.dirname(__file__), "data", "text_pt.gear")
 
@@ -80,7 +71,8 @@ def generate_encrypted_text_file():
     from unittest.mock import patch
     import gearshift
     
-    set_up_key_file()
+    with io.open(key_filename, "wb") as fout:
+        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
     context = gearshift.GearshiftContext.instance(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
@@ -88,7 +80,7 @@ def generate_encrypted_text_file():
             with gearshift.io.open(encrypted_text_pt_filename, mode="w", context=context) as fout:
                 fout.write(TEXT_PT)
     
-    tear_down_key_file()
+    os.remove(key_filename)
 
 EMPTY_PT = b""
 encrypted_empty_pt_filename = os.path.join(os.path.dirname(__file__), "data", "empty_pt.gear")
@@ -98,7 +90,8 @@ def generate_encrypted_binary_file_with_empty_plaintext():
     from unittest.mock import patch
     import gearshift
     
-    set_up_key_file()
+    with io.open(key_filename, "wb") as fout:
+        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
     context = gearshift.GearshiftContext.instance(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
@@ -106,4 +99,4 @@ def generate_encrypted_binary_file_with_empty_plaintext():
             with gearshift.io.open(encrypted_empty_pt_filename, mode="wb", context=context) as fout:
                 fout.write(EMPTY_PT)
     
-    tear_down_key_file()
+    os.remove(key_filename)
