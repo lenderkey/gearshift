@@ -99,5 +99,46 @@ class TestIO(unittest.TestCase):
 
         self.check_read_encrypted_binary_file_success()
 
+    def check_read_encrypted_binary_file_failure(self):
+        with builtins.open(encrypted_filename, "wb") as fout:
+            fout.write(encrypted_file_contents)
+
+        with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+            with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                with self.assertRaises(ValueError):
+                    fin.read()
+
+    def test_read_encrypted_binary_file_with_incorrect_key_in_key_file(self):
+        with builtins.open(key_filename, "wb") as fout: # keys cannot be base64 encoded
+            fout.write(SECOND_KEY)
+
+        self.check_read_encrypted_binary_file_failure()
+
+    def test_read_encrypted_binary_file_with_no_key_in_key_file(self):
+        with builtins.open(key_filename, "wb") as fout: # keys cannot be base64 encoded
+            fout.write(b"")
+
+        self.check_read_encrypted_binary_file_failure()
+
+    def test_read_encrypted_binary_file_with_truncated_key_in_key_file(self):
+        with builtins.open(key_filename, "wb") as fout: # keys cannot be base64 encoded
+            fout.write(TV_KEY[:-len(b"foo")])
+
+        self.check_read_encrypted_binary_file_failure()
+
+    def test_read_encrypted_binary_file_with_prefixed_key_in_key_file(self):
+        with builtins.open(key_filename, "wb") as fout: # keys cannot be base64 encoded
+            fout.write(b"foo")
+            fout.write(TV_KEY)
+
+        self.check_read_encrypted_binary_file_failure()
+
+    def test_read_encrypted_binary_file_with_postfixed_key_in_key_file(self):
+        with builtins.open(key_filename, "wb") as fout: # keys cannot be base64 encoded
+            fout.write(TV_KEY)
+            fout.write(b"foo")
+
+        self.check_read_encrypted_binary_file_failure()
+
 if __name__ == '__main__':
     unittest.main()
