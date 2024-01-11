@@ -125,6 +125,41 @@ class TestIO(unittest.TestCase):
                 with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
                     self.assertEqual(fin.read(), TV_PT)
 
+    def test_read_encrypted_binary_file_with_valid_duplicate_block_after_invalid_block(self):
+        for block_type in [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG]:
+            with builtins.open(encrypted_filename, "wb") as fout:
+                fout.write(
+                    encrypted_file_header +
+                    block_type + int(0).to_bytes(1, "big") +
+                    encrypted_file_key_hash_block +
+                    encrypted_file_aes_iv_block +
+                    encrypted_file_aes_tag_block +
+                    encrypted_file_end_block +
+                    TV_CT
+                )
+
+            with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+                with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                    self.assertEqual(fin.read(), TV_PT)
+
+    def test_read_encrypted_binary_file_with_invalid_duplicate_block_after_valid_block(self):
+        for block_type in [BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG]:
+            with builtins.open(encrypted_filename, "wb") as fout:
+                fout.write(
+                    encrypted_file_header +
+                    encrypted_file_key_hash_block +
+                    encrypted_file_aes_iv_block +
+                    encrypted_file_aes_tag_block +
+                    block_type + int(0).to_bytes(1, "big") +
+                    encrypted_file_end_block +
+                    TV_CT
+                )
+
+            with gearshift.io.open(encrypted_filename, mode="rb", context=self.context) as fin:
+                with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
+                    with self.assertRaises(AssertionError):
+                        fin.read()
+
     def test_read_encrypted_binary_file_with_header_missing(self):
         with builtins.open(encrypted_filename, "wb") as fout:
             fout.write(
