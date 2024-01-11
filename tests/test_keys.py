@@ -10,7 +10,7 @@ import os
 import gearshift
 
 from ._test_gearshift import (
-    TV_KEY, TV_PT, key_hash,
+    TV_KEY, TV_PT, tv_key_hash,
     encrypted_file_contents,
     patched_base64_urlsafe_b64decode,
 )
@@ -21,7 +21,7 @@ cfg = {
     "security": {
         "key_system": key_system,
         "key_file": key_filename,
-        "key_hash": key_hash,
+        "key_hash": tv_key_hash,
     },
 }
 

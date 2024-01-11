@@ -12,7 +12,7 @@ import yaml
 import gearshift
 
 from ._test_gearshift import (
-    TV_KEY, TV_PT, key_hash, 
+    TV_KEY, TV_PT, tv_key_hash, 
     encrypted_file_contents,
     patched_base64_urlsafe_b64decode, patched_os_urandom,
 )
@@ -23,7 +23,7 @@ cfg = {
     "security": {
         "key_system": key_system,
         "key_file": key_filename,
-        "key_hash": key_hash,
+        "key_hash": tv_key_hash,
     },
 }
 
@@ -59,7 +59,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.cfg_folder, os.path.dirname(os.path.expanduser(default_cfg_filename)))
         self.assertEqual(context.cfg["security"]["key_system"], key_system)
         self.assertEqual(context.cfg["security"]["key_file"], key_filename)
-        self.assertEqual(context.cfg["security"]["key_hash"], key_hash)
+        self.assertEqual(context.cfg["security"]["key_hash"], tv_key_hash)
 
     def test_init_with_specified_cfg_file(self):
         cfg_filename = os.path.join(os.path.dirname(__file__), "data", "cfg_file.yaml")
@@ -75,7 +75,7 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.cfg_folder, os.path.dirname(cfg_filename))
         self.assertEqual(context.cfg["security"]["key_system"], key_system)
         self.assertEqual(context.cfg["security"]["key_file"], key_filename)
-        self.assertEqual(context.cfg["security"]["key_hash"], key_hash)
+        self.assertEqual(context.cfg["security"]["key_hash"], tv_key_hash)
 
     def test_init_with_empty_cfg_file(self):
         cfg_filename = os.path.join(os.path.dirname(__file__), "data", "cfg_file.yaml")

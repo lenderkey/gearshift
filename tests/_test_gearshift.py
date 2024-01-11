@@ -6,8 +6,8 @@ TV_PT = bytes.fromhex("2db5168e932556f8089a0622981d017d") # 128 bits
 TV_CT = bytes.fromhex("fa4362189661d163fcd6a56d8bf0405a") # 128 bits
 TV_TAG = bytes.fromhex("d636ac1bbedd5cc3ee727dc2ab4a9489") # 128 bits # len(TV_TAG) == 16
 
-key_hash = "qaj4gLCP7u86X2-PUWIAj45yUWvtCz5vfHPRDoc82Pc" # 256 bits # see generate_tv_key_hash() below
-key_hash_bytes = key_hash.encode("ASCII") # len(key_hash_bytes) == 43
+tv_key_hash = "qaj4gLCP7u86X2-PUWIAj45yUWvtCz5vfHPRDoc82Pc" # 256 bits # see generate_tv_key_hash() below
+tv_key_hash_bytes = tv_key_hash.encode("ASCII") # len(tv_key_hash_bytes) == 43
 
 # copied from context.py
 BLOCK_KEY_HASH = b"H"
@@ -17,7 +17,7 @@ BLOCK_END = b"\0"
 BLOCK_ZLIB = b"Z" # not allowed (yet)
 
 encrypted_file_header = b"GEAR"
-encrypted_file_key_hash_block = BLOCK_KEY_HASH + int(43).to_bytes(1, "big") + key_hash_bytes
+encrypted_file_key_hash_block = BLOCK_KEY_HASH + int(43).to_bytes(1, "big") + tv_key_hash_bytes
 encrypted_file_aes_iv_block = BLOCK_AES_IV + int(12).to_bytes(1, "big") + TV_IV
 encrypted_file_aes_tag_block = BLOCK_AES_TAG + int(16).to_bytes(1, "big") + TV_TAG
 encrypted_file_end_block = BLOCK_END + int(0).to_bytes(1, "big") # int(0).to_bytes(1, "big") == b"\0"
@@ -31,7 +31,7 @@ encrypted_file_contents = \
     TV_CT
 
 def generate_tv_key_hash():
-    # used (once) to generate key_hash above
+    # used (once) to generate tv_key_hash above
     import base64
     import hashlib
     hasher = hashlib.sha256()
@@ -59,7 +59,7 @@ cfg = {
     "security": {
         "key_system": key_system,
         "key_file": key_filename,
-        "key_hash": key_hash,
+        "key_hash": tv_key_hash,
     },
 }
 

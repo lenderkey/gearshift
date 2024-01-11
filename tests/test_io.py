@@ -11,7 +11,7 @@ import string
 import gearshift
 
 from ._test_gearshift import (
-    TV_KEY, TV_PT, TV_CT, key_hash,
+    TV_KEY, TV_PT, TV_CT, tv_key_hash,
     BLOCK_KEY_HASH, BLOCK_AES_IV, BLOCK_AES_TAG, BLOCK_END,
     encrypted_file_header,
     encrypted_file_key_hash_block,
@@ -30,7 +30,7 @@ cfg = {
     "security": {
         "key_system": key_system,
         "key_file": key_filename,
-        "key_hash": key_hash,
+        "key_hash": tv_key_hash,
     },
 }
 
