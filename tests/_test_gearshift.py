@@ -6,7 +6,7 @@ TV_PT = bytes.fromhex("2db5168e932556f8089a0622981d017d") # 128 bits
 TV_CT = bytes.fromhex("fa4362189661d163fcd6a56d8bf0405a") # 128 bits
 TV_TAG = bytes.fromhex("d636ac1bbedd5cc3ee727dc2ab4a9489") # 128 bits # len(TV_TAG) == 16
 
-tv_key_hash = "qaj4gLCP7u86X2-PUWIAj45yUWvtCz5vfHPRDoc82Pc" # 256 bits # see generate_tv_key_hash() below
+tv_key_hash = "qaj4gLCP7u86X2-PUWIAj45yUWvtCz5vfHPRDoc82Pc" # 256 bits # == generate_key_hash(TV_TAG)
 tv_key_hash_bytes = tv_key_hash.encode("ASCII") # len(tv_key_hash_bytes) == 43
 
 # copied from context.py
@@ -30,18 +30,18 @@ encrypted_file_contents = \
     encrypted_file_end_block + \
     TV_CT
 
-def generate_tv_key_hash():
+def generate_key_hash(key:bytes) -> str:
+    # simplified version of helpers.sha256_data()
     # used (once) to generate tv_key_hash above
+    # also used by test_context.test_server_key_[fs|aws]()
     import base64
     import hashlib
     hasher = hashlib.sha256()
-    hasher.update(TV_KEY)
-    tv_hash = base64.urlsafe_b64encode(hasher.digest()).decode().rstrip("=")
-    print("_test_gearshift.generate_tv_hash:")
-    print(f"{tv_hash=}")
+    hasher.update(key)
+    return base64.urlsafe_b64encode(hasher.digest()).decode().rstrip("=")
 
 # base64.urlsafe_b64decode() used by context.server_key()
-# patched because TV_KEY cannot be base64 encoded
+# patched because TV_KEY cannot be base64 encoded for encryption/decryption
 def patched_base64_urlsafe_b64decode(s):
     return s
 
@@ -72,7 +72,7 @@ def generate_encrypted_text_file():
     import gearshift
     
     with io.open(key_filename, "wb") as fout:
-        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
+        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
     context = gearshift.GearshiftContext.instance(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
@@ -91,7 +91,7 @@ def generate_encrypted_binary_file_with_empty_plaintext():
     import gearshift
     
     with io.open(key_filename, "wb") as fout:
-        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
+        fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
     context = gearshift.GearshiftContext.instance(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):

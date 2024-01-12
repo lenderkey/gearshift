@@ -2,8 +2,9 @@
 ## python -m unittest tests/test_context.py
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
+import base64
 import io
 import os
 import uuid
@@ -14,6 +15,7 @@ import gearshift
 from ._test_gearshift import (
     TV_KEY, TV_PT, tv_key_hash, 
     encrypted_file_contents,
+    generate_key_hash,
     patched_base64_urlsafe_b64decode, patched_os_urandom,
 )
 
@@ -31,7 +33,7 @@ class TestContext(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with io.open(key_filename, "wb") as fout:
-            fout.write(TV_KEY) # TV_KEY cannot be base64 encoded
+            fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
 
     @classmethod
     def tearDownClass(cls):
@@ -114,6 +116,73 @@ class TestContext(unittest.TestCase):
         second_context = gearshift.GearshiftContext.instance(cfg=second_cfg)
 
         self.assertIs(second_context, context)
+
+    def test_server_key_fs(self):
+        # okay to base64 encode TV_KEY here
+        # because not doing any encryption/decryption
+        fs_key = base64.urlsafe_b64encode(TV_KEY)
+        fs_key_hash = generate_key_hash(fs_key)
+        fs_key_filename = os.path.join(os.path.dirname(__file__), "data", "test_server_key_file.key")
+        fs_cfg = {
+            "security": {
+                "key_system": "fs",
+                "key_file": fs_key_filename,
+                "key_hash": fs_key_hash,
+            },
+        }
+        with io.open(fs_key_filename, "wb") as fout:
+            fout.write(fs_key)
+
+        context = gearshift.GearshiftContext(cfg=fs_cfg)
+        key, key_hash = context.server_key() # default key_hash=None
+
+        self.assertEqual(key, TV_KEY)
+        self.assertEqual(key_hash, fs_key_hash)
+
+        os.remove(fs_key_filename)
+
+    @patch("boto3.session.Session", autospec=True)
+    def test_server_key_aws(self, mock_session:MagicMock):
+        import json
+
+        # okay to base64 encode TV_KEY here
+        # because not doing any encryption/decryption
+        aws_key = base64.urlsafe_b64encode(TV_KEY)
+        aws_key_hash = generate_key_hash(aws_key)
+        aws_cfg = {
+            "security": {
+                "key_system": "aws",
+                "secret_name": "foo",
+                "key_hash": aws_key_hash,
+                # "aws_access_key_id": _, 
+                # "aws_secret_access_key": _,
+                # "region_name": _, 
+                # "profile_name": _,
+            },
+        }
+        secret = {
+            aws_key_hash: aws_key.decode()
+        }
+        mock_session.return_value.client.return_value.get_secret_value.return_value = {
+            "SecretString": json.dumps(secret),
+        }
+
+        context = gearshift.GearshiftContext(cfg=aws_cfg)
+        key, key_hash = context.server_key() # default key_hash=None
+
+        self.assertEqual(key, TV_KEY)
+        self.assertEqual(key_hash, aws_key_hash)
+
+        mock_session.assert_called_once_with()
+        clientd = {
+            "service_name": "secretsmanager",
+            "region_name": "ca-central-1",
+        }
+        mock_session.return_value.client.assert_called_once_with(**clientd)
+        mock_client = mock_session.return_value.client.return_value
+        mock_client.get_secret_value.assert_called_once_with(
+            SecretId=aws_cfg["security"]["secret_name"]
+        )
 
     def test_aes_encrypt_to_stream(self):
         context = gearshift.GearshiftContext.instance(cfg=cfg)
