@@ -73,7 +73,7 @@ def generate_encrypted_text_file():
     
     with io.open(key_filename, "wb") as fout:
         fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
-    context = gearshift.GearshiftContext.instance(cfg=cfg)
+    context = gearshift.GearshiftContext(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
         with patch("os.urandom", patched_os_urandom):
@@ -92,7 +92,7 @@ def generate_encrypted_binary_file_with_empty_plaintext():
     
     with io.open(key_filename, "wb") as fout:
         fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
-    context = gearshift.GearshiftContext.instance(cfg=cfg)
+    context = gearshift.GearshiftContext(cfg=cfg)
 
     with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
         with patch("os.urandom", patched_os_urandom):

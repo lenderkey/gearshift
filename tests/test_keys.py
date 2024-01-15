@@ -35,7 +35,7 @@ encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "test_keys_
 class TestIO(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.context = gearshift.GearshiftContext.instance(cfg=cfg)
+        cls.context = gearshift.GearshiftContext(cfg=cfg)
 
     def tearDown(self):
         if os.path.exists(key_filename):

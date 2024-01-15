@@ -185,7 +185,7 @@ class TestContext(unittest.TestCase):
         )
 
     def test_aes_encrypt_to_stream(self):
-        context = gearshift.GearshiftContext.instance(cfg=cfg)
+        context = gearshift.GearshiftContext(cfg=cfg)
         encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "encrypted_file.gear")
         with io.open(encrypted_filename, "wb") as fout:
             with patch("base64.urlsafe_b64decode", patched_base64_urlsafe_b64decode):
@@ -198,7 +198,7 @@ class TestContext(unittest.TestCase):
         os.remove(encrypted_filename)
 
     def test_aes_decrypt_to_bytes(self):
-        context = gearshift.GearshiftContext.instance(cfg=cfg)
+        context = gearshift.GearshiftContext(cfg=cfg)
         encrypted_filename = os.path.join(os.path.dirname(__file__), "data", "encrypted_file.gear")
         with io.open(encrypted_filename, "wb") as fout:
             fout.write(encrypted_file_contents)

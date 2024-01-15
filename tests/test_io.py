@@ -42,7 +42,7 @@ class TestIO(unittest.TestCase):
     def setUpClass(cls):
         with builtins.open(key_filename, "wb") as fout:
             fout.write(TV_KEY) # TV_KEY cannot be base64 encoded for encryption/decryption
-        cls.context = gearshift.GearshiftContext.instance(cfg=cfg)
+        cls.context = gearshift.GearshiftContext(cfg=cfg)
 
     @classmethod
     def tearDownClass(cls):
