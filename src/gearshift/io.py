@@ -101,7 +101,7 @@ def strip(filename:str) -> str:
 
     return filename
 
-def exits(filename:str) -> bool:
+def exists(filename:str) -> bool:
     if filename.endswith(".gear"):
         return os.path.exists(filename)
     elif os.path.exists(filename):
