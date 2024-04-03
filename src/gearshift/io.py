@@ -110,3 +110,13 @@ def exists(filename:str) -> bool:
         return True
     else:
         return False
+
+def remove(filename:str) -> None:
+    if filename.endswith(".gear"):
+        os.remove(filename)
+    elif os.path.exists(filename + ".gear"):
+        os.remove(filename + ".gear")
+    elif os.path.exists(filename):
+        os.remove(filename)
+    else:
+        raise FileNotFoundError(f"No such file: {filename}")
