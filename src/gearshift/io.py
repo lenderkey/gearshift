@@ -73,6 +73,7 @@ class Gearshift:
             return self.fio.read(size)
         
         if self._data is None:
+            self._position = 0
             self._data = self.context.aes_decrypt_to_bytes(fin=self.fio)
 
             if self.mode == "r":
