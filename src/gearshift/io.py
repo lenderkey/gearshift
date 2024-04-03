@@ -75,6 +75,9 @@ class Gearshift:
             data = data.decode(self.encoding or "utf-8")
 
         return data
+    
+    def flush(self):
+        pass
 
 def open(filename, mode="r", *av, **ad):
     return Gearshift(filename=filename, mode=mode, *av, **ad)
