@@ -27,7 +27,7 @@ def gearshift(filename:str, remove_on_write:bool=False) -> str:
     logger.info(f"{L}: created {gearname}")
     return gearname
 
-def filename(gearname:str) -> str:
+def filename(filename:str) -> str:
     """
     Make sure the orginal filename exists.
     """
