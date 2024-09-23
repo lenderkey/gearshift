@@ -1,9 +1,11 @@
+from typing import Union
+
 import builtins
 import os
 import random
 
 class Gearshift:
-    def __init__(self, filename, mode="r", encoding=None, context=None, **ad):
+    def __init__(self, filename:str, mode="r", encoding:str=None, context=None, remove_on_write:bool=True, **ad):
         from .context import GearshiftContext
 
         if filename.endswith(".gear"):
@@ -17,6 +19,7 @@ class Gearshift:
         self.fio = None
         self.context = context or GearshiftContext.instance()
         self.key_hash = None
+        self.remove_on_write = remove_on_write
 
         self.filename_tmp = None
 
@@ -55,8 +58,9 @@ class Gearshift:
             else:
                 os.rename(self.filename_tmp, self.filename_gear)
 
-                try: os.remove(self.filename)
-                except IOError: pass
+                if self.remove_on_write:
+                    try: os.remove(self.filename)
+                    except IOError: pass
 
             self.filename_tmp = None
 
