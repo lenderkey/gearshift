@@ -3,6 +3,9 @@ from typing import Union
 import builtins
 import os
 import random
+from types import SimpleNamespace
+
+import logging as logger
 
 class Gearshift:
     def __init__(self, filename:str, mode="r", encoding:str=None, context=None, remove_on_write:bool=True, **ad):
@@ -124,3 +127,63 @@ def remove(filename:str) -> None:
         os.remove(filename)
     else:
         raise FileNotFoundError(f"No such file: {filename}")
+
+def ensure_crypt(
+    filename:str, 
+    lazy:bool=True,                 ## if True, will not overwrite existing files
+    required:bool=True,             ## if True, will raise FileNotFoundError if file does not exist
+) -> SimpleNamespace:
+    decrypt_name = filename
+    if decrypt_name.endswith(".gear"):
+        decrypt_name = decrypt_name[:-5]
+
+    crypt_name = decrypt_name + ".gear"
+    created = False
+
+    if os.path.exists(crypt_name) and lazy:
+        pass
+    elif not os.path.exists(decrypt_name):
+        if required:
+            raise FileNotFoundError(f"ensure: No such file: {decrypt_name}")
+    else:
+        with open(decrypt_name, "rb") as fin, Gearshift(crypt_name, mode="wb") as fout:
+            fout.write(fin.read())
+
+        created = True
+        logger.info(f"ensure: created {crypt_name}")
+
+    return SimpleNamespace(
+        crypt_name=crypt_name,
+        decrypt_name=decrypt_name,
+        created=created,
+    )
+
+def ensure_decrypt(
+    filename:str, 
+    lazy:bool=True,                 ## if True, will not overwrite existing files
+    required:bool=True,             ## if True, will raise FileNotFoundError if file does not exist
+) -> SimpleNamespace:
+    decrypt_name = filename
+    if decrypt_name.endswith(".gear"):
+        decrypt_name = decrypt_name[:-5]
+
+    crypt_name = decrypt_name + ".gear"
+    created = False
+
+    if lazy and os.path.exists(decrypt_name):
+        pass
+    elif not os.path.exists(crypt_name):
+        if required:
+            raise FileNotFoundError(f"ensure: No such file: {crypt_name}")
+    else:
+        with Gearshift(crypt_name, mode="rb") as fin, open(decrypt_name, "wb") as fout:
+            fout.write(fin.read())
+
+        created = True
+        logger.info(f"ensure: created {decrypt_name}")
+
+    return SimpleNamespace(
+        crypt_name=crypt_name,
+        decrypt_name=decrypt_name,
+        created=created,
+    )
