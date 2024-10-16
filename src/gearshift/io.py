@@ -119,13 +119,18 @@ def exists(filename:str) -> bool:
         return False
 
 def remove(filename:str) -> None:
-    if filename.endswith(".gear"):
-        os.remove(filename)
-    elif os.path.exists(filename + ".gear"):
-        os.remove(filename + ".gear")
-    elif os.path.exists(filename):
-        os.remove(filename)
-    else:
+    stripname = strip(filename)
+    was_removed = False
+
+    if os.path.exists(stripname):
+        os.remove(stripname)
+        was_removed = True
+
+    if os.path.exists(stripname + ".gear"):
+        os.remove(stripname + ".gear")
+        was_removed = True
+
+    if not was_removed:
         raise FileNotFoundError(f"No such file: {filename}")
 
 def ensure_crypt(
