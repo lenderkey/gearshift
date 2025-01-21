@@ -1,7 +1,7 @@
 #
 #   commands/key-create.py
 #   
-#   David Janes
+#   David
 #   Gearshift
 #   2023-09-11
 #

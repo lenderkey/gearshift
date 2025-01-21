@@ -1,7 +1,7 @@
 #
 #   commands/decrypt.py
 #   
-#   David Janes
+#   David
 #   Gearshift
 #   2023-08-06
 #

@@ -1,7 +1,7 @@
 #
 #   helpers.py
 #
-#   David Janes
+#   David
 #   Gearshift
 #   2023-03-23
 #

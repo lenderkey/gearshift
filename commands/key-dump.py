@@ -1,7 +1,7 @@
 #
 #   commands/dump.py
 #   
-#   David Janes
+#   David
 #   Gearshift
 #   2023-12-07
 #
