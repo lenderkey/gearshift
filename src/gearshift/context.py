@@ -56,8 +56,8 @@ class GearshiftContext:
                     raise GearshiftNoContextError(f"{L}: {self.cfg_file=} not found")
 
     @classmethod
-    def instance(self, **ad) -> "GearshiftContext":
-        if not GearshiftContext._instance:
+    def instance(self, replace_instance:bool=False, **ad) -> "GearshiftContext":
+        if not GearshiftContext._instance or replace_instance:
             GearshiftContext._instance = GearshiftContext(**ad)
 
         return GearshiftContext._instance
