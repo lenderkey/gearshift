@@ -215,6 +215,11 @@ class GearshiftContext:
                         
                 raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
             
+            case "test":
+                key_hash = "testkeyhash"
+                key = base64.urlsafe_b64decode(base64.urlsafe_b64encode(b"0" * 32))
+                return key, key_hash
+            
             case "aws":
                 ## note you have to do `pip install boto3`
                 import json
