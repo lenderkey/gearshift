@@ -1,14 +1,16 @@
 from typing import Union
 
 import builtins
+import io as stdlib_io
 import os
 import random
 from types import SimpleNamespace
 
 import logging as logger
 
+
 class Gearshift:
-    def __init__(self, filename:str, mode="r", encoding:str=None, context=None, remove_on_write:bool=True, **ad):
+    def __init__(self, filename: str, mode="r", encoding: str = None, context=None, remove_on_write: bool = True, **ad):
         from .context import GearshiftContext
 
         if filename.endswith(".gear"):
@@ -28,6 +30,7 @@ class Gearshift:
 
         self._data = None
         self._position = None
+        self._write_buffer = None
 
     def __enter__(self):
         match self.mode:
@@ -36,9 +39,10 @@ class Gearshift:
                 base = f".{base}.{random.randint(0, 999999):06d}"
                 self.filename_tmp = os.path.join(dir, base)
                 self.fio = builtins.open(self.filename_tmp, "wb")
+                self._write_buffer = bytearray()
 
                 return self
-            
+
             case 'r' | 'rb':
                 try:
                     self.fio = builtins.open(self.filename_gear, "rb")
@@ -47,11 +51,24 @@ class Gearshift:
                     self.fio = builtins.open(self.filename, self.mode)
 
                 return self
-            
+
             case _:
                 raise ValueError(f"Unsupported mode: {self.mode}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.filename_tmp and 'w' in self.mode and not exc_type:
+            try:
+                self.context.aes_encrypt_to_stream(
+                    bytes(self._write_buffer),
+                    fout=self.fio,
+                    key_hash=self.key_hash,
+                )
+            except BaseException:
+                self.fio.close()
+                os.remove(self.filename_tmp)
+                self.filename_tmp = None
+                raise
+
         if self.fio:
             self.fio.close()
 
@@ -62,23 +79,29 @@ class Gearshift:
                 os.rename(self.filename_tmp, self.filename_gear)
 
                 if self.remove_on_write:
-                    try: os.remove(self.filename)
-                    except IOError: pass
+                    try:
+                        os.remove(self.filename)
+                    except IOError:
+                        pass
 
             self.filename_tmp = None
 
     def write(self, data):
-        assert 'w' in self.mode
+        if "w" not in self.mode:
+            raise stdlib_io.UnsupportedOperation("not writable")
 
         if self.mode == "w":
             data = data.encode(self.encoding or "utf-8")
-        
-        self.context.aes_encrypt_to_stream(data, fout=self.fio, key_hash=self.key_hash)
+
+        self._write_buffer.extend(data)
 
     def read(self, /, size=None):
+        if "r" not in self.mode:
+            raise stdlib_io.UnsupportedOperation("not readable")
+
         if not self.filename_gear:
             return self.fio.read(size)
-        
+
         if self._data is None:
             self._position = 0
             self._data = self.context.aes_decrypt_to_bytes(fin=self.fio)
@@ -86,29 +109,33 @@ class Gearshift:
             if self.mode == "r":
                 self._data = self._data.decode(self.encoding or "utf-8")
 
-        if size is None:
+        if size is None or size < 0:
+            chunk = self._data[self._position :]
             self._position = len(self._data)
-            return self._data
+            return chunk
 
-        chunk = self._data[self._position:self._position+size]
+        chunk = self._data[self._position : self._position + size]
         self._position += size
         self._position = min(self._position, len(self._data))
 
         return chunk
-    
+
     def flush(self):
         pass
+
 
 def open(filename, mode="r", *av, **ad):
     return Gearshift(filename=filename, mode=mode, *av, **ad)
 
-def strip(filename:str) -> str:
+
+def strip(filename: str) -> str:
     if filename.endswith(".gear"):
         return filename[:-5]
 
     return filename
 
-def exists(filename:str) -> bool:
+
+def exists(filename: str) -> bool:
     if filename.endswith(".gear"):
         return os.path.exists(filename)
     elif os.path.exists(filename):
@@ -118,7 +145,8 @@ def exists(filename:str) -> bool:
     else:
         return False
 
-def remove(filename:str) -> None:
+
+def remove(filename: str) -> None:
     stripname = strip(filename)
     was_removed = False
 
@@ -133,10 +161,11 @@ def remove(filename:str) -> None:
     if not was_removed:
         raise FileNotFoundError(f"No such file: {filename}")
 
+
 def ensure_crypt(
-    filename:str, 
-    lazy:bool=True,                 ## if True, will not overwrite existing files
-    required:bool=True,             ## if True, will raise FileNotFoundError if file does not exist
+    filename: str,
+    lazy: bool = True,  ## if True, will not overwrite existing files
+    required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
 ) -> SimpleNamespace:
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
@@ -151,8 +180,10 @@ def ensure_crypt(
         if required:
             raise FileNotFoundError(f"ensure: No such file: {decrypt_name}")
     else:
-        with open(decrypt_name, "rb") as fin, Gearshift(crypt_name, mode="wb") as fout:
-            fout.write(fin.read())
+        with builtins.open(decrypt_name, "rb") as fin:
+            data = fin.read()
+        with Gearshift(crypt_name, mode="wb") as fout:
+            fout.write(data)
 
         created = True
         logger.info(f"ensure: created {crypt_name}")
@@ -163,10 +194,11 @@ def ensure_crypt(
         created=created,
     )
 
+
 def ensure_decrypt(
-    filename:str, 
-    lazy:bool=True,                 ## if True, will not overwrite existing files
-    required:bool=True,             ## if True, will raise FileNotFoundError if file does not exist
+    filename: str,
+    lazy: bool = True,  ## if True, will not overwrite existing files
+    required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
 ) -> SimpleNamespace:
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
@@ -181,7 +213,7 @@ def ensure_decrypt(
         if required:
             raise FileNotFoundError(f"ensure: No such file: {crypt_name}")
     else:
-        with Gearshift(crypt_name, mode="rb") as fin, open(decrypt_name, "wb") as fout:
+        with Gearshift(crypt_name, mode="rb") as fin, builtins.open(decrypt_name, "wb") as fout:
             fout.write(fin.read())
 
         created = True

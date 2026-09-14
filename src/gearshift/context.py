@@ -6,8 +6,9 @@
 #   2023-03-23
 #
 
-from typing import Tuple, Union, ForwardRef
+from typing import Tuple, Union
 
+import hvac
 import yaml
 import os
 import sys
@@ -17,12 +18,12 @@ import io
 
 import logging as logger
 
-hvac = ForwardRef("hvac")
-
 L = "GearshiftContext"
+
 
 class GearshiftNoContextError(ValueError):
     pass
+
 
 class GearshiftContext:
     _instance = None
@@ -33,7 +34,7 @@ class GearshiftContext:
     BLOCK_ZLIB = b"Z"
     BLOCK_END = b"\0"
 
-    def __init__(self, cfg_file:str=None, cfg:dict=None, cfg_optional:bool=False):
+    def __init__(self, cfg_file: str = None, cfg: dict = None, cfg_optional: bool = False):
         L = "Gearshift.__init__"
 
         self._connection = None
@@ -56,58 +57,67 @@ class GearshiftContext:
                     raise GearshiftNoContextError(f"{L}: {self.cfg_file=} not found")
 
     @classmethod
-    def instance(self, replace_instance:bool=False, **ad) -> "GearshiftContext":
+    def instance(self, replace_instance: bool = False, **ad) -> "GearshiftContext":
         if not GearshiftContext._instance or replace_instance:
             GearshiftContext._instance = GearshiftContext(**ad)
 
         return GearshiftContext._instance
-    
+
     @property
     def src_root(self):
         return self.resolve_path(self.get("src.root", required=True))
-    
+
     @property
     def src_host(self):
         return self.get("src.host", required=False)
-    
+
     @property
     def src_url(self):
         return self.get("src.url", required=True)
-    
+
     @property
     def src_user(self):
         return self.get("src.user", required=False)
-    
+
     @property
     def src_folder(self):
         """
         This lets you sync a subfolder of the source only
         """
         return self.get("src.folder", required=False) or "/"
-    
+
     @property
-    def src_pem(self):  
+    def src_pem(self):
         return self.get("src.pem", required=False)
-    
+
     @property
-    def src_token_id(self):  
+    def src_token_id(self):
         return self.get("src.token_id", required=False)
-    
+
     def src_path(self, src_name):
         return os.path.join(self.src_root, src_name)
-    
-    def dst_link_path(self, key_hash:str, data_hash:str) -> str:
-       return os.path.join(self.src_root, ".links", key_hash or "plaintext", data_hash[:2], data_hash[2:4], data_hash)
 
-    def get(self, keypath:str, default:bool=None, required=False):
+    def dst_link_path(self, key_hash: str, data_hash: str) -> str:
+        return os.path.join(self.src_root, ".links", key_hash or "plaintext", data_hash[:2], data_hash[2:4], data_hash)
+
+    def dst_store_path(self, dst_name: str) -> str:
+        root = os.path.abspath(self.src_root)
+        destination = os.path.abspath(os.path.join(root, dst_name))
+        if os.path.commonpath((root, destination)) != root:
+            raise ValueError(f"{L}: {dst_name=} must stay within {root=}")
+        return destination
+
+    def get(self, keypath: str, default: bool = None, required=False):
         from .helpers import get
+
         return get(self.cfg, keypath, default=default, required=required)
 
-    def set(self, keypath:str, value):
+    def set(self, keypath: str, value):
         from .helpers import set
+
         return set(self.cfg, keypath, value)
 
-    def resolve_path(self, path:str):
+    def resolve_path(self, path: str):
         if path is None:
             logger.fatal(f"{L}: {path=} cannot be resolved")
             sys.exit(1)
@@ -118,12 +128,12 @@ class GearshiftContext:
             return os.path.normpath(os.path.join(self.cfg_folder, path))
         else:
             return path
-        
-    def dst_has_hash(self, data_hash):
-        link_filename = self.dst_link_path(data_hash)
+
+    def dst_has_hash(self, data_hash, key_hash=None):
+        link_filename = self.dst_link_path(key_hash or self.server_key_hash(), data_hash)
         return os.path.exists(link_filename)
 
-    def ingest_link(self, data_hash:str, dst_name:str):
+    def ingest_link(self, data_hash: str, dst_name: str, key_hash=None):
         """
         Will return True if the link exists.
         Consider returning an enumeration.
@@ -133,7 +143,7 @@ class GearshiftContext:
         if os.path.isabs(dst_name):
             raise ValueError(f"{L}: {dst_name=} must be relative")
 
-        link_filename = self.dst_link_path(data_hash)
+        link_filename = self.dst_link_path(key_hash or self.server_key_hash(), data_hash)
         link_stbuf = os.stat(link_filename) if os.path.exists(link_filename) else None
         if not link_stbuf:
             logger.debug(f"{L}: {link_filename=} does not exist")
@@ -146,11 +156,11 @@ class GearshiftContext:
             if dst_stbuf.st_ino == link_stbuf.st_ino:
                 logger.info(f"{L}: {dst_filename=} already linked to {link_filename=}")
                 return True
-            
+
             try:
                 os.remove(dst_filename)
                 logger.info(f"{L}: removed existing {dst_filename=}")
-            except:
+            except OSError:
                 pass
 
         os.makedirs(os.path.dirname(dst_filename), exist_ok=True)
@@ -158,14 +168,14 @@ class GearshiftContext:
 
         logger.info(f"{L}: linked {dst_filename=} {link_filename=}")
         return True
-    
+
     def server_key_hash(self) -> str:
         """
         The current key_hash, or None
         """
         return self.get("security.key_hash", required=False) or None
-    
-    def server_key(self, key_hash:str=None) -> Tuple[bytes, str]:
+
+    def server_key(self, key_hash: str = None) -> Tuple[bytes, str]:
         """
         This is the key for encrypting/decrypting files.
 
@@ -175,7 +185,7 @@ class GearshiftContext:
 
         match self.get("security.key_system") or "fs":
             case "vault":
-                key_hash = key_hash or "current" 
+                key_hash = key_hash or "current"
                 key_root = self.get_vault_key_root()
                 key_group = self.get_vault_key_group()
                 vault_client = self.get_vault_client()
@@ -184,15 +194,18 @@ class GearshiftContext:
                     read_response = vault_client.secrets.kv.v2.read_secret(
                         path=key_path,
                     )
-                except hvac.exceptions.InvalidPath:
-                    raise KeyError(f"{L}: key not found: {key_path}")
+                except hvac.exceptions.InvalidPath as exc:
+                    raise KeyError(f"{L}: key not found: {key_path}") from exc
 
                 data = read_response.get('data', {})
                 data = data.get('data', {})
                 key_encoded = data.get('key')
-                key = base64.urlsafe_b64decode(key_encoded)
                 key_hash = data.get('key_hash')
-                if not key or not key_hash:
+                if not key_encoded or not key_hash:
+                    raise KeyError(f"{L}: key not found: {key_path} [2]")
+
+                key = base64.urlsafe_b64decode(key_encoded)
+                if not key:
                     raise KeyError(f"{L}: key not found: {key_path} [2]")
 
                 return key, key_hash
@@ -212,14 +225,14 @@ class GearshiftContext:
                             continue
 
                         return base64.urlsafe_b64decode(key), key_hash
-                        
+
                 raise ValueError(f"{L}: {keys_filename=} has no key with {keys_hash=}")
-            
+
             case "test":
                 key_hash = "testkeyhash"
                 key = base64.urlsafe_b64decode(base64.urlsafe_b64encode(b"0" * 32))
                 return key, key_hash
-            
+
             case "aws":
                 ## note you have to do `pip install boto3`
                 import json
@@ -233,24 +246,22 @@ class GearshiftContext:
                     "service_name": "secretsmanager",
                     "region_name": "ca-central-1",
                 }
-                for key in [ 
-                    "aws_access_key_id", 
-                    "aws_secret_access_key", 
-                    "region_name", 
-                    "profile_name" 
+                for key in [
+                    "aws_access_key_id",
+                    "aws_secret_access_key",
+                    "region_name",
                 ]:
                     value = self.get(f"security.{key}", required=False)
                     if value:
                         clientd[key] = value
- 
-                session = boto3.session.Session()
+
+                profile_name = self.get("security.profile_name", required=False)
+                session = boto3.session.Session(profile_name=profile_name) if profile_name else boto3.session.Session()
                 client = session.client(**clientd)
 
                 try:
                     secret_name = self.get("security.secret_name", required=True)
-                    get_secret_value_response = client.get_secret_value(
-                        SecretId=secret_name
-                    )
+                    get_secret_value_response = client.get_secret_value(SecretId=secret_name)
                 except ClientError as x:
                     logger.error(f"{L}: {x=}")
                     raise
@@ -260,7 +271,7 @@ class GearshiftContext:
 
                 if key_hash not in secretd:
                     raise KeyError(f"{L}: key not found: {key_hash}")
-                
+
                 key = base64.urlsafe_b64decode(secretd[key_hash])
 
                 ## this is a hack for now 🧐
@@ -268,12 +279,11 @@ class GearshiftContext:
                     key = base64.urlsafe_b64decode(key)
 
                 return key, key_hash
-            
+
             case _:
                 raise ValueError(f"{L}: unknown key_system: {self.get('security.key_system')}")
 
-
-    def aes_encrypt_to_stream(self, data:bytes, fout:io.BytesIO, key_hash:str=None) -> None:
+    def aes_encrypt_to_stream(self, data: bytes, fout: io.BytesIO, key_hash: str = None) -> None:
         from .helpers import aes_encrypt
 
         key, key_hash = self.server_key(key_hash)
@@ -300,12 +310,12 @@ class GearshiftContext:
 
         fout.write(aes_ciphertext)
 
-    def aes_decrypt_to_bytes(self, fin:io.BytesIO) -> bytes:
+    def aes_decrypt_to_bytes(self, fin: io.BytesIO) -> bytes:
         from .helpers import aes_decrypt
-        import string
 
         header = fin.read(4)
-        assert header == b"GEAR"
+        if header != b"GEAR":
+            raise ValueError(f"{L}: invalid header")
 
         key_hash = None
         aes_iv = None
@@ -314,30 +324,43 @@ class GearshiftContext:
         stop = False
         while not stop:
             block_tag = fin.read(1)
-            if block_tag is None:
-                break
+            if not block_tag:
+                raise ValueError(f"{L}: unexpected end of header")
 
-            block_length = fin.read(1) or 0
+            block_length_bytes = fin.read(1)
+            if len(block_length_bytes) != 1:
+                raise ValueError(f"{L}: missing block length")
+            block_length = int.from_bytes(block_length_bytes, "big")
+
+            if block_tag == GearshiftContext.BLOCK_END:
+                if block_length:
+                    raise ValueError(f"{L}: end block must be empty")
+                stop = True
+                continue
+
+            block_data = fin.read(block_length)
+            if len(block_data) != block_length:
+                raise ValueError(f"{L}: incomplete block: {block_tag!r}")
 
             match block_tag:
-                case GearshiftContext.BLOCK_END:
-                    stop = True
                 case GearshiftContext.BLOCK_AES_IV:
-                    aes_iv = fin.read(int.from_bytes(block_length, "big"))
+                    aes_iv = block_data
                 case GearshiftContext.BLOCK_AES_TAG:
-                    aes_tag = fin.read(int.from_bytes(block_length, "big"))
+                    aes_tag = block_data
                 case GearshiftContext.BLOCK_KEY_HASH:
-                    key_hash = fin.read(int.from_bytes(block_length, "big"))
-                    key_hash = key_hash.decode("ASCII")
+                    key_hash = block_data.decode("ASCII")
                 case otherwise:
-                    if block_tag in string.ascii_uppercase:
+                    if b"A" <= block_tag <= b"Z":
                         raise ValueError(f"{L}: unknown (required) block tag: {block_tag}")
-                    
+
                     logger.info(f"{L}: unknown (optional) block tag: {block_tag}")
 
-        assert aes_iv
-        assert aes_tag
-        assert key_hash
+        if not aes_iv:
+            raise ValueError(f"{L}: AES IV is missing")
+        if not aes_tag:
+            raise ValueError(f"{L}: AES tag is missing")
+        if not key_hash:
+            raise ValueError(f"{L}: key hash is missing")
 
         # key_hash_len = int(fin.read(1)[0])
         # key_hash = fin.read(key_hash_len).decode("ASCII")
@@ -347,18 +370,17 @@ class GearshiftContext:
         # aes_tag = fin.read(aes_tag_len)
 
         data = fin.read()
-        key, _ = self.server_key(key_hash)     
-        
+        key, _ = self.server_key(key_hash)
+
         return aes_decrypt(key, iv=aes_iv, tag=aes_tag, ciphertext=data)
-    
+
     def get_vault_key_root(self) -> str:
         return "gearshift-keys"
-    
+
     def get_vault_key_group(self) -> str:
-        """
-        """
+        """ """
         return self.get("vault.key_group", required=False) or "default"
-    
+
     def get_vault_client(self) -> "hvac.Client":
         import hvac
 
@@ -372,9 +394,10 @@ class GearshiftContext:
         # Check if the client is authenticated
         if not vault_client.is_authenticated():
             raise PermissionError("Authentication failed")
-        
+
         logger.debug(f"{L}: {vault_client=}")
         return vault_client
+
 
 if __name__ == '__main__':
     context = GearshiftContext()

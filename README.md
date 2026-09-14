@@ -2,6 +2,27 @@
 
 Encryption at Rest Tools
 
+Requires Python 3.13 or newer.
+
+## Development
+
+Install the project and its locked development dependencies:
+
+```console
+uv sync --python 3.13
+```
+
+Run the test and quality tools inside the managed environment:
+
+```console
+uv run pytest
+uv run coverage run -m pytest
+uv run coverage report
+uv run ruff check .
+uv run black --check --diff .
+uv run mypy --install-types --non-interactive src/gearshift tests
+```
+
 ## Technical Details
 ### File Format
 
@@ -10,8 +31,8 @@ Encryption at Rest Tools
 
 Each block is:
 
-* 1 byte: length (N) of data
 * 1 byte: type
+* 1 byte: length (N) of data
 * N bytes: data
 
 All upper case "types" must be understood by Readers.

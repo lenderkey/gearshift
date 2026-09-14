@@ -33,9 +33,9 @@ def cli(ctx, debug, cfg, set_):
         cfg_file = cfg
         if cfg_file.find("/") == -1:
             if cfg_file.find(".") == -1:
-                ccfg_filefg += ".yaml"
+                cfg_file += ".yaml"
 
-            cfg_file = f"~/.gearshift/{cfg}"
+            cfg_file = f"~/.gearshift/{cfg_file}"
 
         if cfg_file.find("~") == 0:
             cfg_file = os.path.expanduser(cfg_file)

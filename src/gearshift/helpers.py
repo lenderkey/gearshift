@@ -15,18 +15,20 @@ import base64
 from cryptography.hazmat.primitives import ciphers
 from cryptography.hazmat.backends import default_backend
 
-def _list_advance(o, keypath:str, required:bool, key:str=None) -> Any:
+
+def _list_advance(o, keypath: str, required: bool, key: str = None) -> Any:
     while isinstance(o, list):
-        if len(o) == 0 and required:
-            raise KeyError(keypath)
-        elif len(o) == 0:
-            o = o[0]
-        else:
-            break
+        if not o:
+            if required:
+                raise KeyError(keypath)
+            return None
+
+        o = o[0]
 
     return o
 
-def set(d:dict, keypath:str, value:object) -> None:
+
+def set(d: dict, keypath: str, value: object) -> None:
     parts = keypath.split(".")
     for key in parts[:-1]:
         ## d = _list_advance(d, keypath, required=False, key=key)
@@ -39,12 +41,16 @@ def set(d:dict, keypath:str, value:object) -> None:
     key = parts[-1]
     d[key] = value
 
-def get(d:dict, keypath:str, default:Any=None, required:bool=False, first:bool=True) -> Any:
+
+def get(d: dict, keypath: str, default: Any = None, required: bool = False, first: bool = True) -> Any:
     assert isinstance(required, bool)
 
     parts = keypath.split(".")
     for key in parts[:-1]:
         d = _list_advance(d, keypath, required, key=key)
+
+        if d is None:
+            return default
 
         if required and key not in d:
             raise KeyError(keypath)
@@ -71,7 +77,8 @@ def get(d:dict, keypath:str, default:Any=None, required:bool=False, first:bool=T
     else:
         return default
 
-def sha256_file(fd:BinaryIO) -> str:
+
+def sha256_file(fd: BinaryIO) -> str:
     sha256 = hashlib.sha256()
     while True:
         data = fd.read(65536)  # Read 64KB at a time
@@ -81,6 +88,7 @@ def sha256_file(fd:BinaryIO) -> str:
 
     return base64.urlsafe_b64encode(sha256.digest()).decode("utf-8").rstrip("=")
 
+
 def sha256_data(*av) -> str:
     hasher = hashlib.sha256()
     for x, data in enumerate(av):
@@ -89,10 +97,11 @@ def sha256_data(*av) -> str:
 
         if not isinstance(data, bytes):
             data = str(data).encode("utf-8")
-            
+
         hasher.update(data)
 
     return base64.urlsafe_b64encode(hasher.digest()).decode("utf-8").rstrip("=")
+
 
 def md5_data(*av) -> str:
     hasher = hashlib.md5()
@@ -107,26 +116,26 @@ def md5_data(*av) -> str:
 
     return base64.urlsafe_b64encode(hasher.digest()).decode("utf-8").rstrip("=")
 
-def aes_encrypt(key:bytes, data:bytes) -> Tuple[bytes, bytes, bytes]:
+
+def aes_encrypt(key: bytes, data: bytes) -> Tuple[bytes, bytes, bytes]:
     iv = os.urandom(12)
     encryptor = ciphers.Cipher(
-        ciphers.algorithms.AES(key),
-        ciphers.modes.GCM(iv),
-        backend=default_backend()
+        ciphers.algorithms.AES(key), ciphers.modes.GCM(iv), backend=default_backend()
     ).encryptor()
     ciphertext = encryptor.update(data) + encryptor.finalize()
     return (iv, encryptor.tag, ciphertext)
 
-def aes_decrypt(key:bytes, iv:bytes, tag:bytes, ciphertext:bytes) -> bytes:
+
+def aes_decrypt(key: bytes, iv: bytes, tag: bytes, ciphertext: bytes) -> bytes:
     decryptor = ciphers.Cipher(
-        ciphers.algorithms.AES(key),
-        ciphers.modes.GCM(iv, tag),
-        backend=default_backend()
+        ciphers.algorithms.AES(key), ciphers.modes.GCM(iv, tag), backend=default_backend()
     ).decryptor()
     return decryptor.update(ciphertext) + decryptor.finalize()
 
+
 if __name__ == '__main__':
     import pprint
+
     value = os.urandom(12)
     value = base64.urlsafe_b64encode(value)
     value = value.decode("ascii")
