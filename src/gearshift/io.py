@@ -146,6 +146,15 @@ def exists(filename: str) -> bool:
         return False
 
 
+def is_encrypted(filename: str) -> bool:
+    return os.path.exists(strip(filename) + ".gear")
+
+
+def is_unencrypted(filename: str) -> bool:
+    stripname = strip(filename)
+    return os.path.exists(stripname) and not os.path.exists(stripname + ".gear")
+
+
 def remove(filename: str) -> None:
     stripname = strip(filename)
     was_removed = False

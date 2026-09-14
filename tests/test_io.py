@@ -121,6 +121,34 @@ def test_strip_and_exists_cover_plain_and_encrypted_names(tmp_path):
     assert gearshift.exists(plain.as_posix())
 
 
+def test_is_encrypted_and_is_unencrypted(tmp_path):
+    plain = tmp_path / "file"
+    encrypted = tmp_path / "file.gear"
+
+    assert not gearshift.is_encrypted(plain.as_posix())
+    assert not gearshift.is_encrypted(encrypted.as_posix())
+    assert not gearshift.is_unencrypted(plain.as_posix())
+    assert not gearshift.is_unencrypted(encrypted.as_posix())
+
+    plain.write_bytes(b"plain")
+    assert not gearshift.is_encrypted(plain.as_posix())
+    assert not gearshift.is_encrypted(encrypted.as_posix())
+    assert gearshift.is_unencrypted(plain.as_posix())
+    assert gearshift.is_unencrypted(encrypted.as_posix())
+
+    encrypted.write_bytes(b"encrypted")
+    assert gearshift.is_encrypted(plain.as_posix())
+    assert gearshift.is_encrypted(encrypted.as_posix())
+    assert not gearshift.is_unencrypted(plain.as_posix())
+    assert not gearshift.is_unencrypted(encrypted.as_posix())
+
+    plain.unlink()
+    assert gearshift.is_encrypted(plain.as_posix())
+    assert gearshift.is_encrypted(encrypted.as_posix())
+    assert not gearshift.is_unencrypted(plain.as_posix())
+    assert not gearshift.is_unencrypted(encrypted.as_posix())
+
+
 def test_remove_deletes_both_forms_and_reports_missing(tmp_path):
     plain = tmp_path / "file"
     encrypted = tmp_path / "file.gear"
