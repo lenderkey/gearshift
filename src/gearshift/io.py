@@ -1,12 +1,17 @@
-from typing import Union
-
 import builtins
 import io as stdlib_io
+import logging as logger
 import os
 import random
-from types import SimpleNamespace
+from dataclasses import dataclass
 
-import logging as logger
+
+@dataclass
+class EnsureResult:
+    crypt_name: str
+    decrypt_name: str
+    created: bool
+    cleanup: bool | None = None
 
 
 class Gearshift:
@@ -176,7 +181,7 @@ def ensure_crypt(
     lazy: bool = True,  ## if True, will not overwrite existing files
     required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
     cleanup: bool = False,  ## if True, will remove the decrypted file after encryption
-) -> SimpleNamespace:
+) -> EnsureResult:
     operation = "ensure_crypt"
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
@@ -213,7 +218,7 @@ def ensure_crypt(
             except OSError:
                 logger.warning(f"{operation}: failed to remove {decrypt_name}")
 
-    return SimpleNamespace(
+    return EnsureResult(
         crypt_name=crypt_name,
         decrypt_name=decrypt_name,
         created=created,
@@ -225,7 +230,7 @@ def ensure_decrypt(
     filename: str,
     lazy: bool = True,  ## if True, will not overwrite existing files
     required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
-) -> SimpleNamespace:
+) -> EnsureResult:
     operation = "ensure_decrypt"
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
@@ -246,7 +251,7 @@ def ensure_decrypt(
         created = True
         logger.info(f"{operation}: created {decrypt_name}")
 
-    return SimpleNamespace(
+    return EnsureResult(
         crypt_name=crypt_name,
         decrypt_name=decrypt_name,
         created=created,

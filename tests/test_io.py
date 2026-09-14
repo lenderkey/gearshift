@@ -1,5 +1,6 @@
 import io
 import os
+from dataclasses import is_dataclass
 from unittest.mock import Mock
 
 import pytest
@@ -167,6 +168,8 @@ def test_ensure_crypt_creates_and_honors_lazy_and_required(tmp_path, test_contex
     plain.write_bytes(b"payload")
 
     result = gearshift.ensure_crypt(plain.as_posix() + ".gear")
+    assert isinstance(result, gearshift.EnsureResult)
+    assert is_dataclass(result)
     assert result.__dict__ == {
         "crypt_name": plain.as_posix() + ".gear",
         "decrypt_name": plain.as_posix(),
@@ -241,6 +244,9 @@ def test_ensure_decrypt_lazy_and_missing_branches(tmp_path):
     plain = tmp_path / "file"
     plain.write_bytes(b"existing")
     result = gearshift.ensure_decrypt(plain.as_posix() + ".gear")
+    assert isinstance(result, gearshift.EnsureResult)
+    assert is_dataclass(result)
+    assert result.cleanup is None
     assert result.created is False
 
     plain.unlink()

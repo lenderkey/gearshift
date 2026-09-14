@@ -82,8 +82,9 @@ decrypted = ensure_decrypt("document.pdf.gear")
 
 `ensure_crypt()` preserves the plaintext file by default. Pass `cleanup=True`
 to remove it after the encrypted file is confirmed ready. Both helpers return
-a namespace containing `crypt_name`, `decrypt_name`, and `created`;
-`ensure_crypt()` also returns `cleanup` to report whether cleanup completed.
+an `EnsureResult` dataclass containing `crypt_name`, `decrypt_name`, and
+`created`. Its `cleanup` field reports whether encryption cleanup completed;
+for decryption results, `cleanup` is `None`.
 
 ### Encrypting and Decrypting files
 
