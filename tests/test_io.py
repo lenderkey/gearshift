@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 import gearshift
+import gearshift.io as gearshift_io
 
 
 def test_text_and_binary_encrypted_round_trip(tmp_path, test_context):
@@ -142,14 +143,15 @@ def test_ensure_crypt_creates_and_honors_lazy_and_required(tmp_path, test_contex
         "crypt_name": plain.as_posix() + ".gear",
         "decrypt_name": plain.as_posix(),
         "created": True,
+        "cleanup": False,
     }
-    assert not plain.exists()
+    assert plain.read_bytes() == b"payload"
 
     lazy = gearshift.ensure_crypt(plain.as_posix())
     assert lazy.created is False
     missing = gearshift.ensure_crypt((tmp_path / "missing").as_posix(), required=False)
     assert missing.created is False
-    with pytest.raises(FileNotFoundError, match="ensure: No such file"):
+    with pytest.raises(FileNotFoundError, match="ensure_crypt: No such file"):
         gearshift.ensure_crypt((tmp_path / "required").as_posix())
 
 
@@ -160,8 +162,51 @@ def test_ensure_crypt_can_replace_existing_encrypted_file(tmp_path, test_context
     (tmp_path / "file.gear").write_bytes(b"old")
     result = gearshift.ensure_crypt(plain.as_posix(), lazy=False)
     assert result.created is True
+    assert result.cleanup is False
+    assert plain.read_bytes() == b"new"
     with gearshift.open(plain.as_posix(), "rb", context=test_context) as source:
         assert source.read() == b"new"
+
+
+def test_ensure_crypt_cleanup_removes_plaintext(tmp_path, test_context):
+    gearshift.context.GearshiftContext._instance = test_context
+    plain = tmp_path / "file"
+    plain.write_bytes(b"payload")
+
+    result = gearshift.ensure_crypt(plain.as_posix(), cleanup=True)
+    assert result.created is True
+    assert result.cleanup is True
+    assert not plain.exists()
+
+
+def test_ensure_crypt_cleanup_handles_lazy_and_failed_removal(tmp_path, monkeypatch, test_context):
+    gearshift.context.GearshiftContext._instance = test_context
+    plain = tmp_path / "file"
+    plain.write_bytes(b"payload")
+    gearshift.ensure_crypt(plain.as_posix())
+
+    result = gearshift.ensure_crypt(plain.as_posix(), cleanup=True)
+    assert result.created is False
+    assert result.cleanup is True
+    assert not plain.exists()
+
+    plain.write_bytes(b"new plaintext")
+    monkeypatch.setattr(gearshift_io.os, "remove", Mock(side_effect=PermissionError))
+    result = gearshift.ensure_crypt(plain.as_posix(), cleanup=True)
+    assert result.created is False
+    assert result.cleanup is False
+    assert plain.exists()
+
+
+def test_ensure_crypt_cleanup_is_complete_when_plaintext_is_already_absent(tmp_path, test_context):
+    gearshift.context.GearshiftContext._instance = test_context
+    plain = tmp_path / "file"
+    plain.write_bytes(b"payload")
+    gearshift.ensure_crypt(plain.as_posix(), cleanup=True)
+
+    result = gearshift.ensure_crypt(plain.as_posix(), cleanup=True)
+    assert result.created is False
+    assert result.cleanup is True
 
 
 def test_ensure_decrypt_lazy_and_missing_branches(tmp_path):
@@ -173,7 +218,7 @@ def test_ensure_decrypt_lazy_and_missing_branches(tmp_path):
     plain.unlink()
     result = gearshift.ensure_decrypt(plain.as_posix(), required=False)
     assert result.created is False
-    with pytest.raises(FileNotFoundError, match="ensure: No such file"):
+    with pytest.raises(FileNotFoundError, match="ensure_decrypt: No such file"):
         gearshift.ensure_decrypt(plain.as_posix())
 
 

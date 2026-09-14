@@ -68,6 +68,23 @@ file system on a different machine (e.g. NFS).
 Otherwise, Vault is the preferred way to do things.
 
 ## Commands
+
+### Ensuring encrypted or decrypted files
+
+The ensure helpers are available directly from the library:
+
+```python
+from gearshift import ensure_crypt, ensure_decrypt
+
+encrypted = ensure_crypt("document.pdf")
+decrypted = ensure_decrypt("document.pdf.gear")
+```
+
+`ensure_crypt()` preserves the plaintext file by default. Pass `cleanup=True`
+to remove it after the encrypted file is confirmed ready. Both helpers return
+a namespace containing `crypt_name`, `decrypt_name`, and `created`;
+`ensure_crypt()` also returns `cleanup` to report whether cleanup completed.
+
 ### Encrypting and Decrypting files
 
 You can use the `gearshift` command to encrypt and decrypt files.

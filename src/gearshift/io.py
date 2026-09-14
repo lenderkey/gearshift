@@ -166,32 +166,49 @@ def ensure_crypt(
     filename: str,
     lazy: bool = True,  ## if True, will not overwrite existing files
     required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
+    cleanup: bool = False,  ## if True, will remove the decrypted file after encryption
 ) -> SimpleNamespace:
+    operation = "ensure_crypt"
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
         decrypt_name = decrypt_name[:-5]
 
     crypt_name = decrypt_name + ".gear"
     created = False
+    crypt_ready = False
+    cleanup_completed = False
 
     if os.path.exists(crypt_name) and lazy:
-        pass
+        crypt_ready = True
     elif not os.path.exists(decrypt_name):
         if required:
-            raise FileNotFoundError(f"ensure: No such file: {decrypt_name}")
+            raise FileNotFoundError(f"{operation}: No such file: {decrypt_name}")
     else:
         with builtins.open(decrypt_name, "rb") as fin:
             data = fin.read()
-        with Gearshift(crypt_name, mode="wb") as fout:
+        with Gearshift(crypt_name, mode="wb", remove_on_write=False) as fout:
             fout.write(data)
 
         created = True
-        logger.info(f"ensure: created {crypt_name}")
+        crypt_ready = True
+        logger.info(f"{operation}: created {crypt_name}")
+
+    if cleanup and crypt_ready:
+        if not os.path.exists(decrypt_name):
+            cleanup_completed = True
+        else:
+            try:
+                os.remove(decrypt_name)
+                cleanup_completed = True
+                logger.info(f"{operation}: removed {decrypt_name}")
+            except OSError:
+                logger.warning(f"{operation}: failed to remove {decrypt_name}")
 
     return SimpleNamespace(
         crypt_name=crypt_name,
         decrypt_name=decrypt_name,
         created=created,
+        cleanup=cleanup_completed,
     )
 
 
@@ -200,6 +217,7 @@ def ensure_decrypt(
     lazy: bool = True,  ## if True, will not overwrite existing files
     required: bool = True,  ## if True, will raise FileNotFoundError if file does not exist
 ) -> SimpleNamespace:
+    operation = "ensure_decrypt"
     decrypt_name = filename
     if decrypt_name.endswith(".gear"):
         decrypt_name = decrypt_name[:-5]
@@ -208,16 +226,16 @@ def ensure_decrypt(
     created = False
 
     if lazy and os.path.exists(decrypt_name):
-        pass
+        logger.info(f"{operation}: {decrypt_name} already exists - skipping decryption")
     elif not os.path.exists(crypt_name):
         if required:
-            raise FileNotFoundError(f"ensure: No such file: {crypt_name}")
+            raise FileNotFoundError(f"{operation}: No such file: {crypt_name}")
     else:
         with Gearshift(crypt_name, mode="rb") as fin, builtins.open(decrypt_name, "wb") as fout:
             fout.write(fin.read())
 
         created = True
-        logger.info(f"ensure: created {decrypt_name}")
+        logger.info(f"{operation}: created {decrypt_name}")
 
     return SimpleNamespace(
         crypt_name=crypt_name,
