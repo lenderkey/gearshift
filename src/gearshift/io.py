@@ -150,6 +150,20 @@ def exists(filename: str) -> bool:
     else:
         return False
 
+def underlying_size(filename: str) -> int:
+    """
+    We know that the size might be slighly wrong because of encryption overhead.
+    We will fix this later
+    """
+    if filename.endswith(".gear"):
+        return os.path.getsize(filename)
+    elif os.path.exists(filename):
+        return os.path.getsize(filename)
+    elif os.path.exists(filename + ".gear"):
+        return os.path.getsize(filename + ".gear")
+    else:
+        raise FileNotFoundError(f"No such file: {filename}")
+
 
 def is_encrypted(filename: str) -> bool:
     return os.path.exists(strip(filename) + ".gear")

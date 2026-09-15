@@ -10,6 +10,7 @@ from gearshift.io import (
     open,  # noqa: A004
     remove,
     strip,
+    underlying_size,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "open",
     "remove",
     "strip",
+    "underlying_size",
 ]
